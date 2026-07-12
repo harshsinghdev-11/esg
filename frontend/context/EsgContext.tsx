@@ -452,10 +452,9 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     notifications,
   ]);
 
-  // Notifications handler
   const addNotification = (text: string, type: "info" | "success" | "warning" = "info") => {
     const newNotif: Notification = {
-      id: "not_" + Date.now(),
+      id: "not_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9),
       text,
       time: "Just now",
       read: false,

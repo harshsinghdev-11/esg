@@ -1,24 +1,22 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { settingsService } from './settings.service.js';
 
 export const settingsController = {
-  async getConfig(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async getConfiguration(req: Request, res: Response, next: NextFunction) {
     try {
-      const { organizationId } = req.user!;
-      const result = await settingsService.getConfig(organizationId);
-      res.status(200).json({ data: result });
+      const config = await settingsService.getConfiguration(req.user!.organizationId);
+      res.json({ data: config });
     } catch (err) {
       next(err);
     }
   },
 
-  async updateConfig(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async updateConfiguration(req: Request, res: Response, next: NextFunction) {
     try {
-      const { organizationId } = req.user!;
-      const result = await settingsService.updateConfig(organizationId, req.body);
-      res.status(200).json({ data: result });
+      const config = await settingsService.updateConfiguration(req.user!.organizationId, req.body);
+      res.json({ data: config });
     } catch (err) {
       next(err);
     }
-  }
+  },
 };
