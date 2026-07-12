@@ -2,9 +2,11 @@
 
 import React, { useState } from "react";
 import { useEsg } from "@/context/EsgContext";
+import { useRouter } from "next/navigation";
 import AppIcon from "@/components/AppIcon";
 
 export default function OrgDashboardView() {
+  const router = useRouter();
   const { overview, departmentRankings, complianceIssues } = useEsg();
   const [trendPillar, setTrendPillar] = useState("Overall");
 
@@ -27,7 +29,10 @@ export default function OrgDashboardView() {
           <h1 className="font-bold text-headline-sm md:text-headline-md text-on-surface">Organization Dashboard</h1>
           <p className="text-on-surface-variant mt-1">Overview of ESG performance and critical alerts.</p>
         </div>
-        <button className="bg-primary text-on-primary px-6 py-2 rounded-lg font-semibold text-label-md hover:bg-primary/95 transition-colors shadow-sm cursor-pointer active:scale-95">
+        <button
+          onClick={() => router.push("/dashboard?view=reports")}
+          className="bg-primary text-on-primary px-6 py-2 rounded-lg font-semibold text-label-md hover:bg-primary/95 transition-colors shadow-sm cursor-pointer active:scale-95"
+        >
           Generate Report
         </button>
       </div>

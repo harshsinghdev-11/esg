@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useEsg } from "@/context/EsgContext";
+import { useRouter } from "next/navigation";
+import api from "@/lib/api";
 import AppIcon from "@/components/AppIcon";
 
 interface GovernanceViewsProps {
@@ -9,6 +11,7 @@ interface GovernanceViewsProps {
 }
 
 export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
+  const router = useRouter();
   const {
     currentUser,
     policies,
@@ -21,6 +24,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
     addComplianceIssue,
     resolveComplianceIssue,
     acknowledgePolicy,
+    addNotification,
     departments,
     employees,
   } = useEsg();
@@ -37,7 +41,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
   // Audit creation states
   const [audDate, setAudDate] = useState("");
   const [auditor, setAuditor] = useState("");
-  const [audDept, setAudDept] = useState("Operations");
+  const [audDept, setAudDept] = useState("");
 
   // Issue creation states
   const [issTitle, setIssTitle] = useState("");
@@ -45,6 +49,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
   const [issOwner, setIssOwner] = useState("");
   const [issAuditId, setIssAuditId] = useState("");
   const [issDue, setIssDue] = useState("");
+  const [remindingPolicyId, setRemindingPolicyId] = useState<string | null>(null);
 
   // Acknowledging reader state
   const [readingPolicyId, setReadingPolicyId] = useState<string | null>(null);
@@ -100,9 +105,60 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
   const currentViewTab = currentUser.role === "employee" ? "employee-policies" : activeTab;
   const unresolvedIssuesCount = complianceIssues.filter((issue) => issue.status !== "Resolved" && issue.status !== "Closed").length;
   const completedAuditsCount = audits.filter((audit) => audit.status === "Completed").length;
+  const adminTabs = [
+    { label: "Dashboard", view: "governance-dashboard" },
+    { label: "Policies", view: "policies" },
+    { label: "Audits", view: "audits" },
+    { label: "Issues", view: "compliance-issues" },
+  ];
+
+  useEffect(() => {
+    if (!audDept && departments.length > 0) {
+      setAudDept(departments[0].name);
+    }
+  }, [audDept, departments]);
+
+  const sendPolicyReminder = async (policyId: string) => {
+    setRemindingPolicyId(policyId);
+    try {
+      const { data } = await api.post(`/policies/${policyId}/remind`);
+      addNotification(`Reminder sent to ${data.data?.remindedCount ?? 0} employees.`, "success");
+    } catch (error: any) {
+      console.error(error);
+      addNotification(error?.response?.data?.error?.message || "Failed to send reminder.", "warning");
+    } finally {
+      setRemindingPolicyId(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
+      {currentUser.role !== "employee" && (
+        <div className="flex flex-wrap gap-2 rounded-xl border border-border-subtle bg-surface-container-lowest p-2 shadow-sm">
+          {adminTabs.map((tab) => {
+            const isActive =
+              (currentViewTab === "dashboard" && tab.view === "governance-dashboard") ||
+              (currentViewTab === "policies" && tab.view === "policies") ||
+              (currentViewTab === "audits" && tab.view === "audits") ||
+              (currentViewTab === "compliance" && tab.view === "compliance-issues");
+
+            return (
+              <button
+                key={tab.view}
+                onClick={() => router.push(`/dashboard?view=${tab.view}`)}
+                className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                  isActive
+                    ? "bg-primary text-on-primary shadow-sm"
+                    : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {currentViewTab === "dashboard" && (
         <div className="space-y-6">
           <div className="flex justify-between items-end mb-4">
@@ -110,7 +166,10 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
               <h2 className="font-bold text-headline-sm md:text-headline-md text-on-surface">Governance & Compliance</h2>
               <p className="text-body-sm text-on-surface-variant mt-1">Audit status, policy guidelines, and corporate compliance issues</p>
             </div>
-            <button className="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg font-semibold text-label-md transition-colors flex items-center gap-1 cursor-pointer">
+            <button
+              onClick={() => router.push("/dashboard?view=audits")}
+              className="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg font-semibold text-label-md transition-colors flex items-center gap-1 cursor-pointer"
+            >
               Schedule Review
             </button>
           </div>
@@ -202,6 +261,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
                   <th className="p-4 py-3">Policy Title</th>
                   <th className="p-4 py-3">Publication Date</th>
                   <th className="p-4 py-3 text-right">Acknowledgement Rate</th>
+                  <th className="p-4 py-3 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="text-body-sm text-on-surface divide-y divide-border-subtle">
@@ -216,6 +276,15 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
                           <div className="bg-leaf-green h-full" style={{ width: pol.ackRate }}></div>
                         </div>
                       </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => sendPolicyReminder(pol.id)}
+                        disabled={remindingPolicyId === pol.id}
+                        className="border border-border-subtle hover:bg-surface-container-low disabled:text-outline px-3 py-1 rounded text-xs font-semibold cursor-pointer"
+                      >
+                        {remindingPolicyId === pol.id ? "Sending..." : "Send Reminder"}
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { useDepartments, useEmployees, useCategories, useEsgConfig } from "@/hooks/useDomainData";
 import { departmentsService } from "@/services/departments.service";
 import { employeesService } from "@/services/employees.service";
@@ -14,6 +15,7 @@ interface SettingsViewsProps {
 }
 
 export default function SettingsViews({ activeTab }: SettingsViewsProps) {
+  const router = useRouter();
   const { currentUser } = useAuth();
   
   const { departments, refetch: refetchDepartments } = useDepartments();
@@ -43,6 +45,8 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
   const [autoEm, setAutoEm] = useState(esgConfig?.autoEmissionCalculationEnabled ?? true);
   const [evidReq, setEvidReq] = useState(esgConfig?.evidenceRequiredEnabled ?? true);
   const [badgeAw, setBadgeAw] = useState(esgConfig?.badgeAutoAwardEnabled ?? true);
+  const [notifyInApp, setNotifyInApp] = useState(esgConfig?.notifyInApp ?? true);
+  const [notifyEmail, setNotifyEmail] = useState(esgConfig?.notifyEmail ?? false);
 
   // Sync config state when loaded
   React.useEffect(() => {
@@ -53,6 +57,8 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
       setAutoEm(esgConfig.autoEmissionCalculationEnabled);
       setEvidReq(esgConfig.evidenceRequiredEnabled);
       setBadgeAw(esgConfig.badgeAutoAwardEnabled);
+      setNotifyInApp(esgConfig.notifyInApp ?? true);
+      setNotifyEmail(esgConfig.notifyEmail ?? false);
     }
   }, [esgConfig]);
 
@@ -105,8 +111,7 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
     }
   };
 
-  const handleSaveConfig = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const saveConfig = async () => {
     if (Number(envW) + Number(socW) + Number(govW) !== 100) {
       alert("Weights must sum up to exactly 100%!");
       return;
@@ -119,6 +124,8 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
         autoEmissionCalculationEnabled: autoEm,
         evidenceRequiredEnabled: evidReq,
         badgeAutoAwardEnabled: badgeAw,
+        notifyInApp,
+        notifyEmail,
       });
       alert("Configuration saved successfully!");
       refetchEsgConfig();
@@ -128,8 +135,46 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
     }
   };
 
+  const handleSaveConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await saveConfig();
+  };
+
+  const settingsTabs = [
+    { label: "Departments", view: "settings-departments" },
+    { label: "Employees", view: "settings-employees" },
+    { label: "Categories", view: "settings-categories" },
+    { label: "ESG Config", view: "settings-esg-config" },
+    { label: "Notifications", view: "settings-notifications" },
+  ];
+
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap gap-2 rounded-xl border border-border-subtle bg-surface-container-lowest p-2 shadow-sm">
+        {settingsTabs.map((tab) => {
+          const isActive =
+            (activeTab === "departments" && tab.view === "settings-departments") ||
+            (activeTab === "employees" && tab.view === "settings-employees") ||
+            (activeTab === "categories" && tab.view === "settings-categories") ||
+            (activeTab === "esg-config" && tab.view === "settings-esg-config") ||
+            (activeTab === "notifications" && tab.view === "settings-notifications");
+
+          return (
+            <button
+              key={tab.view}
+              onClick={() => router.push(`/dashboard?view=${tab.view}`)}
+              className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                isActive
+                  ? "bg-primary text-on-primary shadow-sm"
+                  : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* 1. Departments settings */}
       {activeTab === "departments" && (
         <div className="space-y-6">
@@ -500,30 +545,47 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
           </div>
 
           <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 shadow-sm space-y-4 max-w-xl">
-            <h3 className="font-bold text-body-md text-primary mb-2">Toggle Trigger Events</h3>
+            <h3 className="font-bold text-body-md text-primary mb-2">Delivery Channels</h3>
             <label className="flex items-center justify-between p-3 bg-surface-container-low/40 rounded-lg border border-border-subtle cursor-pointer hover:bg-surface-container-low transition-colors">
               <div>
-                <span className="font-bold text-body-sm text-on-surface">ESG Policy Releases</span>
-                <p className="text-xs text-outline mt-0.5">Notify employees when new policy acknowledgments are required.</p>
+                <span className="font-bold text-body-sm text-on-surface">In-App Notifications</span>
+                <p className="text-xs text-outline mt-0.5">
+                  Required for policy reminders, approval outcomes, badge unlocks, and compliance alerts.
+                </p>
               </div>
-              <input type="checkbox" defaultChecked className="h-4 w-4 text-primary rounded" />
+              <input
+                type="checkbox"
+                checked={notifyInApp}
+                onChange={(e) => setNotifyInApp(e.target.checked)}
+                className="h-4 w-4 text-primary rounded"
+              />
             </label>
 
             <label className="flex items-center justify-between p-3 bg-surface-container-low/40 rounded-lg border border-border-subtle cursor-pointer hover:bg-surface-container-low transition-colors">
               <div>
-                <span className="font-bold text-body-sm text-on-surface">Challenge Status Changes</span>
-                <p className="text-xs text-outline mt-0.5">Notify enrolled users when challenges start or reach review.</p>
+                <span className="font-bold text-body-sm text-on-surface">Email Notifications</span>
+                <p className="text-xs text-outline mt-0.5">
+                  Optional delivery channel for escalations and executive summaries.
+                </p>
               </div>
-              <input type="checkbox" defaultChecked className="h-4 w-4 text-primary rounded" />
+              <input
+                type="checkbox"
+                checked={notifyEmail}
+                onChange={(e) => setNotifyEmail(e.target.checked)}
+                className="h-4 w-4 text-primary rounded"
+              />
             </label>
 
-            <label className="flex items-center justify-between p-3 bg-surface-container-low/40 rounded-lg border border-border-subtle cursor-pointer hover:bg-surface-container-low transition-colors">
-              <div>
-                <span className="font-bold text-body-sm text-on-surface">Approval Queue Outcomes</span>
-                <p className="text-xs text-outline mt-0.5">Notify employees when their submitted proof is approved or rejected.</p>
-              </div>
-              <input type="checkbox" defaultChecked className="h-4 w-4 text-primary rounded" />
-            </label>
+            <div className="rounded-lg border border-border-subtle bg-surface-container-low/50 p-4 text-xs text-on-surface-variant">
+              These channel settings apply to policy acknowledgements, challenge/CSR approvals, badge unlocks, and compliance issue reminders.
+            </div>
+
+            <button
+              onClick={saveConfig}
+              className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer"
+            >
+              Save Notification Settings
+            </button>
           </div>
         </div>
       )}

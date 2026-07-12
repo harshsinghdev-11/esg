@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useEsg } from "@/context/EsgContext";
+import { useRouter } from "next/navigation";
 import AppIcon from "@/components/AppIcon";
 
 interface SocialViewsProps {
@@ -9,11 +10,13 @@ interface SocialViewsProps {
 }
 
 export default function SocialViews({ activeTab }: SocialViewsProps) {
+  const router = useRouter();
   const {
     currentUser,
     csrActivities,
     submissions,
     socialSummary,
+    categories,
     joinActivity,
     submitActivityProof,
     approveSubmission,
@@ -30,7 +33,7 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
   const [actTitle, setActTitle] = useState("");
   const [actCat, setActCat] = useState("Tree Plantation");
   const [actDate, setActDate] = useState("");
-  const [actDept, setActDept] = useState("Operations");
+  const [actDept, setActDept] = useState("");
   const [actPoints, setActPoints] = useState(100);
 
   // Submit proof form states
@@ -39,7 +42,7 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
 
   const handleCreateActivity = (e: React.FormEvent) => {
     e.preventDefault();
-    if (actTitle && actDate) {
+    if (actTitle && actDate && actCat) {
       createCsrActivity(actTitle, actCat, actDate, actDept, Number(actPoints));
       setActTitle("");
       setActDate("");
@@ -58,9 +61,49 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
 
   // Get current active view
   const currentViewTab = currentUser.role === "employee" ? "employee-csr" : activeTab;
+  const adminTabs = [
+    { label: "Dashboard", view: "social-dashboard" },
+    { label: "CSR Activities", view: "csr-activities" },
+  ];
+
+  useEffect(() => {
+    if (!actCat && categories.csr.length > 0) {
+      setActCat(categories.csr[0]);
+    }
+  }, [actCat, categories.csr]);
+
+  useEffect(() => {
+    if (!actDept && departments.length > 0) {
+      setActDept(departments[0].name);
+    }
+  }, [actDept, departments]);
 
   return (
     <div className="space-y-6">
+      {currentUser.role !== "employee" && (
+        <div className="flex flex-wrap gap-2 rounded-xl border border-border-subtle bg-surface-container-lowest p-2 shadow-sm">
+          {adminTabs.map((tab) => {
+            const isActive =
+              (currentViewTab === "dashboard" && tab.view === "social-dashboard") ||
+              (currentViewTab === "csr-list" && tab.view === "csr-activities");
+
+            return (
+              <button
+                key={tab.view}
+                onClick={() => router.push(`/dashboard?view=${tab.view}`)}
+                className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                  isActive
+                    ? "bg-primary text-on-primary shadow-sm"
+                    : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {currentViewTab === "dashboard" && (
         <div className="space-y-6">
           <div className="flex justify-between items-end mb-4">
@@ -68,7 +111,10 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
               <h2 className="font-bold text-headline-sm md:text-headline-md text-on-surface">Social Impact Analytics</h2>
               <p className="text-body-sm text-on-surface-variant mt-1">Diversity, training, and community engagement indicators</p>
             </div>
-            <button className="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg font-semibold text-label-md transition-colors flex items-center gap-1 cursor-pointer">
+            <button
+              onClick={() => router.push("/dashboard?view=reports")}
+              className="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg font-semibold text-label-md transition-colors flex items-center gap-1 cursor-pointer"
+            >
               Export Stats
             </button>
           </div>
@@ -243,10 +289,11 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
                     onChange={(e) => setActCat(e.target.value)}
                     className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
                   >
-                    <option>Tree Plantation</option>
-                    <option>Blood Donation</option>
-                    <option>Local Community Support</option>
-                    <option>E-Waste Recycling</option>
+                    {categories.csr.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">

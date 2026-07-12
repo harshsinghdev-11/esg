@@ -46,6 +46,7 @@ export default function AppShell({ children }: AppShellProps) {
   const searchParams = useSearchParams();
   const { currentUser, logout, loading } = useAuth();
   const {
+    submissions,
     notifications,
     clearNotification,
     clearAllNotifications,
@@ -72,7 +73,7 @@ export default function AppShell({ children }: AppShellProps) {
 
   // Calculate pending submissions count for approvals queue badge
   const pendingApprovalsCount = !isEmployee
-    ? notifications.length // Using notifications length as active notifications queue
+    ? submissions.filter((submission) => submission.status === "Pending").length
     : 0;
 
   return (

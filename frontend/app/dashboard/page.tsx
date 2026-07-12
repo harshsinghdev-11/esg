@@ -63,6 +63,8 @@ function DashboardContent() {
         return <EnvironmentalViews activeTab="factors" />;
       case "sustainability-goals":
         return <EnvironmentalViews activeTab="goals" />;
+      case "operational-records":
+        return <EnvironmentalViews activeTab="operations" />;
       case "carbon-transactions":
         return <EnvironmentalViews activeTab="transactions" />;
       

@@ -330,3 +330,39 @@ Standard responses:
 | Overdue issue flagging | Scheduled (daily) | Flags `compliance_issues` past `due_date` while `OPEN`, sends `ISSUE_OVERDUE` notification |
 | Policy reminder | Scheduled | Sends `POLICY_ACK_REMINDER` to employees without an acknowledgement |
 | Score recalculation | Scheduled (e.g. nightly/weekly) | Recomputes `department_scores` for the current period |
+
+---
+
+## Frontend API Coverage Checklist
+
+This checklist compares the documented backend endpoints in this file against the API calls currently present in the `frontend/` codebase.
+
+- `Present` = the frontend contains a real API call to the documented route.
+- `Missing` = the endpoint is documented here but no frontend API call currently uses it.
+- `Doc mismatch` = the frontend calls an API route that is not documented in this file.
+
+| Module | Present | Missing | Doc mismatch |
+|---|---|---|---|
+| Auth & Identity | `POST /auth/login`, `GET /auth/me` | `POST /auth/register`, `POST /auth/logout`, `POST /auth/refresh` | - |
+| Organizations | - | `GET /organizations/me`, `PATCH /organizations/me` | - |
+| Departments | `GET /departments`, `POST /departments`, `DELETE /departments/:id` | `GET /departments/:id`, `PATCH /departments/:id`, `GET /departments/:id/hierarchy`, `GET /departments/:id/employees` | - |
+| Employees | `GET /employees`, `POST /employees`, `DELETE /employees/:id`, `GET /employees/:id/badges` | `GET /employees/:id`, `PATCH /employees/:id`, `GET /employees/:id/xp-history`, `GET /employees/:id/participations`, `GET /employees/:id/notifications` | - |
+| Categories | `GET /categories`, `POST /categories`, `DELETE /categories/:id` | `GET /categories/:id`, `PATCH /categories/:id` | - |
+| Emission Factors | `GET /emission-factors`, `POST /emission-factors` | `GET /emission-factors/:id`, `PATCH /emission-factors/:id`, `DELETE /emission-factors/:id` | - |
+| Environmental Goals | `GET /environmental-goals`, `POST /environmental-goals` | `GET /environmental-goals/:id`, `PATCH /environmental-goals/:id`, `DELETE /environmental-goals/:id` | - |
+| ESG Policies | `GET /policies`, `POST /policies`, `POST /policies/:id/acknowledge` | `GET /policies/:id`, `PATCH /policies/:id`, `DELETE /policies/:id`, `GET /policies/:id/acknowledgements`, `POST /policies/:id/remind` | - |
+| Badges | `GET /badges`, `POST /badges` | `GET /badges/:id`, `PATCH /badges/:id`, `DELETE /badges/:id`, `GET /badges/:id/holders` | - |
+| Rewards & Redemption | `GET /rewards`, `POST /rewards`, `POST /rewards/:id/redeem`, `GET /redemptions` | `GET /rewards/:id`, `PATCH /rewards/:id`, `DELETE /rewards/:id`, `GET /redemptions/:id`, `PATCH /redemptions/:id` | - |
+| Operational Records | - | `GET /operational-records`, `POST /operational-records`, `GET /operational-records/:id`, `PATCH /operational-records/:id`, `DELETE /operational-records/:id`, `POST /operational-records/:id/calculate` | - |
+| Carbon Transactions | `GET /carbon-transactions`, `POST /carbon-transactions` | `GET /carbon-transactions/:id`, `PATCH /carbon-transactions/:id`, `DELETE /carbon-transactions/:id`, `GET /carbon-transactions/summary`, `POST /carbon-transactions/auto-calculate` | - |
+| CSR Activities | `GET /csr-activities`, `POST /csr-activities`, `PATCH /csr-activities/:id` | `GET /csr-activities/:id`, `DELETE /csr-activities/:id`, `GET /csr-activities/:id/participants` | - |
+| Employee Participation | `POST /csr-activities/:id/participate`, `GET /participations`, `PATCH /participations/:id/approve`, `PATCH /participations/:id/reject` | `GET /participations/:id` | `PATCH /participations/:id/proof` is used in frontend but not documented |
+| Audits | `GET /audits`, `POST /audits` | `GET /audits/:id`, `PATCH /audits/:id`, `DELETE /audits/:id`, `GET /audits/:id/issues` | - |
+| Compliance Issues | `GET /compliance-issues`, `POST /compliance-issues`, `PATCH /compliance-issues/:id` | `GET /compliance-issues/:id`, `DELETE /compliance-issues/:id`, `GET /compliance-issues/overdue` | - |
+| Challenges | `GET /challenges`, `POST /challenges`, `PATCH /challenges/:id/status` | `GET /challenges/:id`, `PATCH /challenges/:id`, `DELETE /challenges/:id`, `GET /challenges/:id/participants` | - |
+| Challenge Participation | `POST /challenges/:id/join`, `PATCH /challenge-participations/:id/progress`, `GET /challenge-participations`, `PATCH /challenge-participations/:id/approve`, `PATCH /challenge-participations/:id/reject` | `GET /challenge-participations/:id` | - |
+| Leaderboard | `GET /leaderboard` | `GET /leaderboard/departments` | - |
+| Scoring & Dashboards | `GET /scores/departments`, `GET /dashboard/environmental`, `GET /dashboard/social`, `GET /dashboard/governance`, `GET /dashboard/gamification`, `GET /dashboard/overview` | `GET /scores/departments/:id`, `POST /scores/departments/:id/recalculate`, `GET /scores/organization` | - |
+| Reports | - | `GET /reports/environmental`, `GET /reports/social`, `GET /reports/governance`, `GET /reports/esg-summary`, `POST /reports/custom`, `GET /reports/:id/export` | - |
+| Settings | `GET /settings/esg-configuration`, `PATCH /settings/esg-configuration` | - | - |
+| Notifications | `GET /notifications`, `PATCH /notifications/:id/read`, `PATCH /notifications/read-all` | `GET /notifications/:id` | - |

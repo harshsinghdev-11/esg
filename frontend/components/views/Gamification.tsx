@@ -13,6 +13,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
   const searchParams = useSearchParams();
   const {
     currentUser,
+    categories,
     challenges,
     submissions,
     badges,
@@ -22,6 +23,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
     leaderboard,
     createChallenge,
     activateChallenge,
+    createBadge,
     approveSubmission,
     rejectSubmission,
     joinChallenge,
@@ -32,11 +34,12 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
 
   // Local Form / UI States
   const [showChallengeForm, setShowChallengeForm] = useState(false);
+  const [showBadgeForm, setShowBadgeForm] = useState(false);
   const [showRewardForm, setShowRewardForm] = useState(false);
   
   // Challenge creation states
   const [chTitle, setChTitle] = useState("");
-  const [chCat, setChCat] = useState("Energy Saving");
+  const [chCat, setChCat] = useState("");
   const [chXp, setChXp] = useState(100);
   const [chDiff, setChDiff] = useState<"Easy" | "Medium" | "Hard">("Medium");
   const [chEvid, setChEvid] = useState(true);
@@ -46,6 +49,13 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
   const [rwTitle, setRwTitle] = useState("");
   const [rwCost, setRwCost] = useState(200);
   const [rwStock, setRwStock] = useState(10);
+
+  // Badge creation states
+  const [badgeName, setBadgeName] = useState("");
+  const [badgeDescription, setBadgeDescription] = useState("");
+  const [badgeMetric, setBadgeMetric] = useState<"total_xp" | "total_points_balance" | "completed_challenge_count">("total_xp");
+  const [badgeOperator, setBadgeOperator] = useState<">=" | ">" | "==" | "<=" | "<">(">=");
+  const [badgeValue, setBadgeValue] = useState(100);
 
   // Submit Progress inline state
   const [submitProgressId, setSubmitProgressId] = useState<string | null>(null);
@@ -63,10 +73,16 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (!chCat && categories.challenge.length > 0) {
+      setChCat(categories.challenge[0]);
+    }
+  }, [categories.challenge, chCat]);
+
   // Form submit handlers
   const handleCreateChallenge = (e: React.FormEvent) => {
     e.preventDefault();
-    if (chTitle && chDead) {
+    if (chTitle && chDead && chCat) {
       createChallenge(chTitle, chCat, Number(chXp), 0, chDiff, chEvid, chDead);
       setChTitle("");
       setChDead("");
@@ -80,6 +96,25 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
       createReward(rwTitle, Number(rwCost), Number(rwStock));
       setRwTitle("");
       setShowRewardForm(false);
+    }
+  };
+
+  const handleCreateBadge = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (badgeName && badgeValue >= 0) {
+      createBadge({
+        name: badgeName,
+        description: badgeDescription,
+        metric: badgeMetric,
+        operator: badgeOperator,
+        value: Number(badgeValue),
+      });
+      setBadgeName("");
+      setBadgeDescription("");
+      setBadgeMetric("total_xp");
+      setBadgeOperator(">=");
+      setBadgeValue(100);
+      setShowBadgeForm(false);
     }
   };
 
@@ -141,10 +176,11 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                     onChange={(e) => setChCat(e.target.value)}
                     className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
                   >
-                    <option>Energy Saving</option>
-                    <option>Waste Reduction</option>
-                    <option>Green Travel</option>
-                    <option>Sustainable Printing</option>
+                    {categories.challenge.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
@@ -452,7 +488,96 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
               <h2 className="font-bold text-headline-sm md:text-headline-md text-on-surface">Sustainability Badges Cabinet</h2>
               <p className="text-body-sm text-on-surface-variant mt-1">Acquire and display unique badges as milestones are reached</p>
             </div>
+            {currentViewTab === "badges" && (
+              <button
+                onClick={() => setShowBadgeForm(!showBadgeForm)}
+                className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <AppIcon name="add" className="text-sm font-bold" />
+                {showBadgeForm ? "Cancel" : "Create Badge"}
+              </button>
+            )}
           </div>
+
+          {currentViewTab === "badges" && showBadgeForm && (
+            <form onSubmit={handleCreateBadge} className="glass-panel border border-border-subtle rounded-xl p-6 max-w-2xl space-y-4">
+              <h3 className="font-semibold text-body-md text-primary">Create Auto-Unlock Badge</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Badge Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={badgeName}
+                    onChange={(e) => setBadgeName(e.target.value)}
+                    placeholder="e.g. Carbon Champion"
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Unlock Metric</label>
+                  <select
+                    value={badgeMetric}
+                    onChange={(e) => setBadgeMetric(e.target.value as typeof badgeMetric)}
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  >
+                    <option value="total_xp">Total XP</option>
+                    <option value="total_points_balance">Points Balance</option>
+                    <option value="completed_challenge_count">Completed Challenges</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Badge Description</label>
+                <textarea
+                  rows={3}
+                  value={badgeDescription}
+                  onChange={(e) => setBadgeDescription(e.target.value)}
+                  placeholder="Explain how this badge is earned and why it matters."
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Operator</label>
+                  <select
+                    value={badgeOperator}
+                    onChange={(e) => setBadgeOperator(e.target.value as typeof badgeOperator)}
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  >
+                    <option value=">=">&gt;=</option>
+                    <option value=">">&gt;</option>
+                    <option value="==">==</option>
+                    <option value="<=">&lt;=</option>
+                    <option value="<">&lt;</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Threshold Value</label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={badgeValue}
+                    onChange={(e) => setBadgeValue(Number(e.target.value))}
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="rounded-xl border border-border-subtle bg-surface-container-low p-4 text-xs text-on-surface-variant">
+                  Employees unlock this badge automatically when the selected metric meets the rule.
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Publish Badge
+              </button>
+            </form>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {badges.map((badge) => {

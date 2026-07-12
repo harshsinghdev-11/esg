@@ -2,20 +2,27 @@
 
 import React, { useState } from "react";
 import { useEsg } from "@/context/EsgContext";
+import { useRouter } from "next/navigation";
 import AppIcon from "@/components/AppIcon";
 
 interface EnvironmentalViewsProps {
-  activeTab: "dashboard" | "factors" | "goals" | "transactions";
+  activeTab: "dashboard" | "factors" | "goals" | "operations" | "transactions";
 }
 
 export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProps) {
+  const router = useRouter();
   const {
+    esgConfig,
     emissionFactors,
     sustainabilityGoals,
+    operationalRecords,
     carbonTransactions,
     environmentalSummary,
     addEmissionFactor,
     addSustainabilityGoal,
+    addOperationalRecord,
+    calculateOperationalRecord,
+    autoCalculateOperationalRecords,
     addCarbonTransaction,
     departments,
   } = useEsg();
@@ -28,6 +35,16 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
   const [showGoalForm, setShowGoalForm] = useState(false);
   const [goalDept, setGoalDept] = useState("");
   const [goalTarget, setGoalTarget] = useState("");
+
+  const [showOpsForm, setShowOpsForm] = useState(false);
+  const [opsSource, setOpsSource] = useState<"PURCHASE" | "MANUFACTURING" | "EXPENSE" | "FLEET">("PURCHASE");
+  const [opsDept, setOpsDept] = useState("");
+  const [opsFactor, setOpsFactor] = useState("");
+  const [opsDescription, setOpsDescription] = useState("");
+  const [opsQuantity, setOpsQuantity] = useState("");
+  const [opsUnit, setOpsUnit] = useState("unit");
+  const [opsDate, setOpsDate] = useState(new Date().toISOString().slice(0, 10));
+  const [opsAmount, setOpsAmount] = useState("");
 
   const [showTxnForm, setShowTxnForm] = useState(false);
   const [txnSource, setTxnSource] = useState<"PURCHASE" | "MANUFACTURING" | "EXPENSE" | "FLEET" | "MANUAL">("MANUAL");
@@ -54,6 +71,31 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
       setGoalDept("");
       setGoalTarget("");
       setShowGoalForm(false);
+    }
+  };
+
+  const handleAddOperationalRecord = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (opsDept && opsFactor && opsQuantity && opsUnit && opsDate) {
+      addOperationalRecord({
+        sourceType: opsSource,
+        departmentId: opsDept,
+        description: opsDescription,
+        quantity: Number(opsQuantity),
+        unit: opsUnit,
+        emissionFactorId: opsFactor,
+        recordDate: opsDate,
+        amount: opsAmount ? Number(opsAmount) : undefined,
+      });
+      setOpsDescription("");
+      setOpsQuantity("");
+      setOpsUnit("unit");
+      setOpsDate(new Date().toISOString().slice(0, 10));
+      setOpsAmount("");
+      setOpsDept("");
+      setOpsFactor("");
+      setOpsSource("PURCHASE");
+      setShowOpsForm(false);
     }
   };
 
@@ -87,9 +129,41 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
   }, 0);
   const targetPct = totalGoalTarget > 0 ? Math.min(100, (totalGoalProgress / totalGoalTarget) * 100) : 0;
   const topSource = environmentalSummary?.emissionsBySource?.[0];
+  const environmentalTabs = [
+    { label: "Dashboard", view: "environmental-dashboard" },
+    { label: "Factors", view: "emission-factors" },
+    { label: "Goals", view: "sustainability-goals" },
+    { label: "Operations", view: "operational-records" },
+    { label: "Transactions", view: "carbon-transactions" },
+  ];
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap gap-2 rounded-xl border border-border-subtle bg-surface-container-lowest p-2 shadow-sm">
+        {environmentalTabs.map((tab) => {
+          const isActive =
+            (activeTab === "dashboard" && tab.view === "environmental-dashboard") ||
+            (activeTab === "factors" && tab.view === "emission-factors") ||
+            (activeTab === "goals" && tab.view === "sustainability-goals") ||
+            (activeTab === "operations" && tab.view === "operational-records") ||
+            (activeTab === "transactions" && tab.view === "carbon-transactions");
+
+          return (
+            <button
+              key={tab.view}
+              onClick={() => router.push(`/dashboard?view=${tab.view}`)}
+              className={`rounded-lg px-4 py-2 text-xs font-semibold transition-all cursor-pointer ${
+                isActive
+                  ? "bg-primary text-on-primary shadow-sm"
+                  : "text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Tab content renderer */}
       {activeTab === "dashboard" && (
         <div className="space-y-6">
@@ -99,7 +173,10 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
               <h2 className="font-bold text-headline-sm md:text-headline-md text-on-surface">Environmental Analytics</h2>
               <p className="text-body-sm text-on-surface-variant mt-1">Q3 2026 Emissions Overview</p>
             </div>
-            <button className="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg font-semibold text-label-md transition-colors flex items-center gap-2 cursor-pointer">
+            <button
+              onClick={() => router.push("/dashboard?view=reports")}
+              className="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg font-semibold text-label-md transition-colors flex items-center gap-2 cursor-pointer"
+            >
               <AppIcon name="download" className="text-[18px]" />
               Export Report
             </button>
@@ -199,6 +276,81 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
                   ))
                 )}
               </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-semibold text-headline-sm text-on-surface">Operational Pipeline</h3>
+                  <p className="text-xs text-outline mt-1">Capture source operations, then convert them into emissions.</p>
+                </div>
+                <span
+                  className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${
+                    esgConfig.autoEmission ? "bg-leaf-green/10 text-[#2E7D32]" : "bg-[#FFF8E1] text-[#F57F17]"
+                  }`}
+                >
+                  Auto calc {esgConfig.autoEmission ? "enabled" : "disabled"}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-xl border border-border-subtle bg-surface-container-low p-4">
+                  <p className="text-xs font-semibold uppercase text-outline">Operational records</p>
+                  <p className="mt-2 text-2xl font-bold text-on-surface">{operationalRecords.length}</p>
+                </div>
+                <div className="rounded-xl border border-border-subtle bg-surface-container-low p-4">
+                  <p className="text-xs font-semibold uppercase text-outline">Pending processing</p>
+                  <p className="mt-2 text-2xl font-bold text-primary">
+                    {operationalRecords.filter((record) => !record.isProcessed).length}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => router.push("/dashboard?view=operational-records")}
+                  className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer"
+                >
+                  Open Operations
+                </button>
+                <button
+                  onClick={() => autoCalculateOperationalRecords()}
+                  className="border border-border-subtle hover:bg-surface-container-low px-4 py-2 rounded-lg text-xs font-semibold text-on-surface cursor-pointer"
+                >
+                  Run Auto-Calculation
+                </button>
+              </div>
+            </div>
+
+            <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 shadow-sm space-y-4">
+              <h3 className="font-semibold text-headline-sm text-on-surface">Latest Operational Records</h3>
+              {operationalRecords.length === 0 ? (
+                <p className="text-body-sm text-outline">No operational records logged yet.</p>
+              ) : (
+                <div className="space-y-3">
+                  {operationalRecords.slice(0, 3).map((record) => (
+                    <div key={record.id} className="rounded-lg border border-border-subtle bg-surface-container-low/50 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-body-sm text-on-surface">{record.description}</p>
+                          <p className="text-xs text-outline mt-1">
+                            {record.sourceType} • {record.department} • {record.quantity}
+                          </p>
+                        </div>
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase ${
+                            record.isProcessed
+                              ? "bg-leaf-green/10 text-[#2E7D32]"
+                              : "bg-[#FFF8E1] text-[#F57F17]"
+                          }`}
+                        >
+                          {record.isProcessed ? "Processed" : "Pending"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -417,6 +569,201 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
                       >
                         {txn.status}
                       </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "operations" && (
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="font-bold text-headline-sm md:text-headline-md text-on-surface">Operational Records Intake</h2>
+              <p className="text-body-sm text-on-surface-variant mt-1">
+                Log purchase, manufacturing, expense, or fleet activity before emission calculation.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => setShowOpsForm(!showOpsForm)}
+                className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <AppIcon name="add" className="text-sm font-bold" />
+                {showOpsForm ? "Cancel" : "Add Record"}
+              </button>
+              <button
+                onClick={() => autoCalculateOperationalRecords()}
+                className="border border-border-subtle hover:bg-surface-container-low px-4 py-2 rounded-lg text-xs font-semibold text-on-surface cursor-pointer"
+              >
+                Batch Auto-Calculate
+              </button>
+            </div>
+          </div>
+
+          {showOpsForm && (
+            <form onSubmit={handleAddOperationalRecord} className="glass-panel border border-border-subtle rounded-xl p-6 space-y-4">
+              <h3 className="font-semibold text-body-md text-primary">Log Operational Source Record</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Source Type</label>
+                  <select
+                    value={opsSource}
+                    onChange={(e) => setOpsSource(e.target.value as typeof opsSource)}
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  >
+                    <option value="PURCHASE">Purchase</option>
+                    <option value="MANUFACTURING">Manufacturing</option>
+                    <option value="EXPENSE">Expense</option>
+                    <option value="FLEET">Fleet</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Record Date</label>
+                  <input
+                    type="date"
+                    value={opsDate}
+                    onChange={(e) => setOpsDate(e.target.value)}
+                    required
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Department</label>
+                  <select
+                    value={opsDept}
+                    onChange={(e) => setOpsDept(e.target.value)}
+                    required
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((department) => (
+                      <option key={department.id} value={department.id}>
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Emission Factor</label>
+                  <select
+                    value={opsFactor}
+                    onChange={(e) => setOpsFactor(e.target.value)}
+                    required
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  >
+                    <option value="">Select Factor</option>
+                    {emissionFactors.map((factor) => (
+                      <option key={factor.id} value={factor.id}>
+                        {factor.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Description</label>
+                <input
+                  type="text"
+                  value={opsDescription}
+                  onChange={(e) => setOpsDescription(e.target.value)}
+                  placeholder="e.g. Diesel purchase for delivery fleet"
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Quantity</label>
+                  <input
+                    type="number"
+                    value={opsQuantity}
+                    onChange={(e) => setOpsQuantity(e.target.value)}
+                    required
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Unit</label>
+                  <input
+                    type="text"
+                    value={opsUnit}
+                    onChange={(e) => setOpsUnit(e.target.value)}
+                    required
+                    placeholder="litre / km / unit"
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Amount (optional)</label>
+                  <input
+                    type="number"
+                    value={opsAmount}
+                    onChange={(e) => setOpsAmount(e.target.value)}
+                    placeholder="1500"
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Save Operational Record
+              </button>
+            </form>
+          )}
+
+          <div className="bg-surface-container-lowest border border-border-subtle rounded-xl shadow-sm overflow-hidden">
+            <table className="w-full border-collapse text-left">
+              <thead className="bg-surface-container-low font-semibold text-label-md text-on-surface-variant border-b border-border-subtle">
+                <tr>
+                  <th className="p-4 py-3">Date</th>
+                  <th className="p-4 py-3">Source</th>
+                  <th className="p-4 py-3">Department</th>
+                  <th className="p-4 py-3">Quantity</th>
+                  <th className="p-4 py-3">Factor</th>
+                  <th className="p-4 py-3">Status</th>
+                  <th className="p-4 py-3 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="text-body-sm text-on-surface divide-y divide-border-subtle">
+                {operationalRecords.map((record) => (
+                  <tr key={record.id} className="hover:bg-surface-container-low/30 transition-colors">
+                    <td className="p-4 text-outline">{record.date}</td>
+                    <td className="p-4">
+                      <div className="font-semibold">{record.sourceType}</div>
+                      <div className="text-xs text-outline mt-1">{record.description}</div>
+                    </td>
+                    <td className="p-4">{record.department}</td>
+                    <td className="p-4 font-semibold text-primary">{record.quantity}</td>
+                    <td className="p-4">{record.emissionFactor}</td>
+                    <td className="p-4">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${
+                          record.isProcessed
+                            ? "bg-leaf-green/10 text-[#2E7D32]"
+                            : "bg-[#FFF8E1] text-[#F57F17]"
+                        }`}
+                      >
+                        {record.isProcessed ? "Processed" : "Pending"}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right">
+                      {record.isProcessed ? (
+                        <span className="text-xs text-outline italic">Already calculated</span>
+                      ) : (
+                        <button
+                          onClick={() => calculateOperationalRecord(record.id)}
+                          className="bg-primary text-on-primary hover:bg-primary-container px-3 py-1 rounded text-xs font-semibold cursor-pointer active:scale-95 transition-all"
+                        >
+                          Calculate
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

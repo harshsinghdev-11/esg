@@ -35,6 +35,8 @@ export interface EsgConfig {
   autoEmission: boolean;
   evidenceReq: boolean;
   autoBadge: boolean;
+  notifyInApp: boolean;
+  notifyEmail: boolean;
 }
 
 export interface EmissionFactor {
@@ -57,6 +59,18 @@ export interface CarbonTransaction {
   department: string;
   emissions: string;
   status: string;
+}
+
+export interface OperationalRecord {
+  id: string;
+  date: string;
+  sourceType: string;
+  department: string;
+  description: string;
+  quantity: string;
+  emissionFactor: string;
+  amount: string;
+  isProcessed: boolean;
 }
 
 export interface CsrActivity {
@@ -189,6 +203,7 @@ export interface EsgContextType {
   esgConfig: EsgConfig;
   emissionFactors: EmissionFactor[];
   sustainabilityGoals: SustainabilityGoal[];
+  operationalRecords: OperationalRecord[];
   carbonTransactions: CarbonTransaction[];
   csrActivities: CsrActivity[];
   challenges: Challenge[];
@@ -224,6 +239,18 @@ export interface EsgContextType {
     transactionDate: string;
     sourceType: "PURCHASE" | "MANUFACTURING" | "EXPENSE" | "FLEET" | "MANUAL";
   }) => Promise<void>;
+  addOperationalRecord: (input: {
+    sourceType: "PURCHASE" | "MANUFACTURING" | "EXPENSE" | "FLEET";
+    departmentId: string;
+    description: string;
+    quantity: number;
+    unit: string;
+    emissionFactorId: string;
+    recordDate: string;
+    amount?: number;
+  }) => Promise<void>;
+  calculateOperationalRecord: (recordId: string) => Promise<void>;
+  autoCalculateOperationalRecords: () => Promise<void>;
   createCsrActivity: (
     title: string,
     category: string,
@@ -241,7 +268,14 @@ export interface EsgContextType {
     deadline: string,
   ) => Promise<void>;
   activateChallenge: (id: string) => Promise<void>;
-  createBadge: (name: string, description: string, icon: string, rule: string) => Promise<void>;
+  createBadge: (input: {
+    name: string;
+    description: string;
+    metric: "total_xp" | "total_points_balance" | "completed_challenge_count";
+    operator: ">=" | ">" | "==" | "<=" | "<";
+    value: number;
+    iconUrl?: string;
+  }) => Promise<void>;
   createReward: (title: string, cost: number, stock: number) => Promise<void>;
   createPolicy: (title: string, content: string) => Promise<void>;
   scheduleAudit: (date: string, auditor: string, department: string) => Promise<void>;
@@ -283,6 +317,8 @@ const emptyConfig: EsgConfig = {
   autoEmission: true,
   evidenceReq: true,
   autoBadge: true,
+  notifyInApp: true,
+  notifyEmail: false,
 };
 
 const EsgContext = createContext<EsgContextType | undefined>(undefined);
@@ -503,6 +539,7 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [rawConfig, setRawConfig] = useState<any | null>(null);
   const [rawEmissionFactors, setRawEmissionFactors] = useState<any[]>([]);
   const [rawGoals, setRawGoals] = useState<any[]>([]);
+  const [rawOperationalRecords, setRawOperationalRecords] = useState<any[]>([]);
   const [rawTransactions, setRawTransactions] = useState<any[]>([]);
   const [rawCsrActivities, setRawCsrActivities] = useState<any[]>([]);
   const [rawParticipations, setRawParticipations] = useState<any[]>([]);
@@ -534,6 +571,7 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setRawConfig(null);
     setRawEmissionFactors([]);
     setRawGoals([]);
+    setRawOperationalRecords([]);
     setRawTransactions([]);
     setRawCsrActivities([]);
     setRawParticipations([]);
@@ -574,6 +612,7 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       api.get("/settings/esg-configuration"),
       api.get("/emission-factors"),
       api.get("/environmental-goals"),
+      api.get("/operational-records?limit=200"),
       api.get("/carbon-transactions?limit=200"),
       api.get("/csr-activities?limit=200"),
       api.get("/participations?limit=200"),
@@ -604,6 +643,7 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       configRes,
       emissionFactorsRes,
       goalsRes,
+      operationalRecordsRes,
       transactionsRes,
       csrActivitiesRes,
       participationsRes,
@@ -633,6 +673,9 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (configRes.status === "fulfilled") setRawConfig(unwrapData<any>(configRes.value));
     if (emissionFactorsRes.status === "fulfilled") setRawEmissionFactors(unwrapList<any>(emissionFactorsRes.value));
     if (goalsRes.status === "fulfilled") setRawGoals(unwrapList<any>(goalsRes.value));
+    if (operationalRecordsRes.status === "fulfilled") {
+      setRawOperationalRecords(unwrapList<any>(operationalRecordsRes.value));
+    }
     if (transactionsRes.status === "fulfilled") setRawTransactions(unwrapList<any>(transactionsRes.value));
     if (csrActivitiesRes.status === "fulfilled") setRawCsrActivities(unwrapList<any>(csrActivitiesRes.value));
     if (participationsRes.status === "fulfilled") setRawParticipations(unwrapList<any>(participationsRes.value));
@@ -772,6 +815,8 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             autoEmission: Boolean(rawConfig.autoEmissionCalculationEnabled),
             evidenceReq: Boolean(rawConfig.evidenceRequiredEnabled),
             autoBadge: Boolean(rawConfig.badgeAutoAwardEnabled),
+            notifyInApp: Boolean(rawConfig.notifyInApp ?? true),
+            notifyEmail: Boolean(rawConfig.notifyEmail ?? false),
           }
         : emptyConfig,
     [rawConfig],
@@ -796,6 +841,22 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         progress: `${goal.currentValue} ${goal.unit}`,
       })),
     [rawGoals],
+  );
+
+  const operationalRecords = useMemo<OperationalRecord[]>(
+    () =>
+      rawOperationalRecords.map((record) => ({
+        id: record.operationalRecordId,
+        date: formatDate(record.recordDate),
+        sourceType: titleCase(record.sourceType),
+        department: record.department?.name ?? "Organization-wide",
+        description: record.description ?? "Operational activity",
+        quantity: `${record.quantity} ${record.unit}`,
+        emissionFactor: record.emissionFactor?.name ?? "Not linked",
+        amount: record.amount !== null && record.amount !== undefined ? String(record.amount) : "N/A",
+        isProcessed: Boolean(record.isProcessed),
+      })),
+    [rawOperationalRecords],
   );
 
   const carbonTransactions = useMemo<CarbonTransaction[]>(
@@ -1054,6 +1115,8 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ...(config.autoEmission !== undefined ? { autoEmissionCalculationEnabled: config.autoEmission } : {}),
           ...(config.evidenceReq !== undefined ? { evidenceRequiredEnabled: config.evidenceReq } : {}),
           ...(config.autoBadge !== undefined ? { badgeAutoAwardEnabled: config.autoBadge } : {}),
+          ...(config.notifyInApp !== undefined ? { notifyInApp: config.notifyInApp } : {}),
+          ...(config.notifyEmail !== undefined ? { notifyEmail: config.notifyEmail } : {}),
         });
       }, "ESG configuration updated.");
     },
@@ -1110,6 +1173,47 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       await withActionHandling(async () => {
         await api.post("/carbon-transactions", input);
       }, "Carbon transaction logged.");
+    },
+    [withActionHandling],
+  );
+
+  const addOperationalRecord = useCallback(
+    async (input: {
+      sourceType: "PURCHASE" | "MANUFACTURING" | "EXPENSE" | "FLEET";
+      departmentId: string;
+      description: string;
+      quantity: number;
+      unit: string;
+      emissionFactorId: string;
+      recordDate: string;
+      amount?: number;
+    }) => {
+      await withActionHandling(async () => {
+        await api.post("/operational-records", {
+          ...input,
+          departmentId: input.departmentId || null,
+          emissionFactorId: input.emissionFactorId || null,
+          amount: input.amount ?? null,
+        });
+      }, "Operational record logged.");
+    },
+    [withActionHandling],
+  );
+
+  const calculateOperationalRecord = useCallback(
+    async (recordId: string) => {
+      await withActionHandling(async () => {
+        await api.post(`/operational-records/${recordId}/calculate`);
+      }, "Operational record processed into carbon transaction.");
+    },
+    [withActionHandling],
+  );
+
+  const autoCalculateOperationalRecords = useCallback(
+    async () => {
+      await withActionHandling(async () => {
+        await api.post("/carbon-transactions/auto-calculate");
+      }, "Auto-calculation completed for unprocessed records.");
     },
     [withActionHandling],
   );
@@ -1174,18 +1278,26 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   const createBadge = useCallback(
-    async (name: string, description: string, _icon: string, _rule: string) => {
+    async (input: {
+      name: string;
+      description: string;
+      metric: "total_xp" | "total_points_balance" | "completed_challenge_count";
+      operator: ">=" | ">" | "==" | "<=" | "<";
+      value: number;
+      iconUrl?: string;
+    }) => {
       await withActionHandling(async () => {
         await api.post("/badges", {
-          name,
-          description,
+          name: input.name,
+          description: input.description,
+          ...(input.iconUrl ? { iconUrl: input.iconUrl } : {}),
           unlockRule: {
-            metric: "total_xp",
-            operator: ">=",
-            value: 100,
+            metric: input.metric,
+            operator: input.operator,
+            value: input.value,
           },
         });
-      }, `Badge '${name}' created.`);
+      }, `Badge '${input.name}' created.`);
     },
     [withActionHandling],
   );
@@ -1427,6 +1539,7 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         esgConfig,
         emissionFactors,
         sustainabilityGoals,
+        operationalRecords,
         carbonTransactions,
         csrActivities,
         challenges,
@@ -1456,6 +1569,9 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addEmissionFactor,
         addSustainabilityGoal,
         addCarbonTransaction,
+        addOperationalRecord,
+        calculateOperationalRecord,
+        autoCalculateOperationalRecords,
         createCsrActivity,
         createChallenge,
         activateChallenge,
