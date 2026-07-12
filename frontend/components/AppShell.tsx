@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEsg } from "@/context/EsgContext";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/rbac";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -42,38 +44,42 @@ const employeeLinks: SidebarLink[] = [
 export default function AppShell({ children }: AppShellProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { currentUser, logout, loading } = useAuth();
   const {
-    currentUser,
-    switchRole,
     notifications,
     clearNotification,
     clearAllNotifications,
   } = useEsg();
 
-  const currentRole = searchParams.get("role") || currentUser.role;
-  const currentView = searchParams.get("view") || (currentRole === "admin" ? "org-dashboard" : "employee-dashboard");
+  if (loading || !currentUser) {
+    return null;
+  }
+
+  const role = currentUser.role;
+  const isEmployee = !can.manageOrg(role) && !can.manageEmployees(role);
+  const currentRoleName = isEmployee ? "employee" : "admin";
+  const currentView = searchParams.get("view") || (isEmployee ? "employee-dashboard" : "org-dashboard");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const navigateTo = (viewName: string) => {
-    router.push(`/dashboard?role=${currentRole}&view=${viewName}`);
+    router.push(`/dashboard?view=${viewName}`);
   };
 
-  const handleRoleChange = (role: "admin" | "employee") => {
-    switchRole(role);
-    const defaultView = role === "admin" ? "org-dashboard" : "employee-dashboard";
-    router.push(`/dashboard?role=${role}&view=${defaultView}`);
+  const handleRoleChange = (selectedRole: "admin" | "employee") => {
+    // Note: Temporary frontend switch for demo purposes, 
+    // real app would re-login or change account
+    const defaultView = selectedRole === "admin" ? "org-dashboard" : "employee-dashboard";
+    router.push(`/dashboard?view=${defaultView}`);
     setShowProfileMenu(false);
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-
-
-  const activeLinks = currentRole === "admin" ? adminLinks : employeeLinks;
+  const activeLinks = isEmployee ? employeeLinks : adminLinks;
 
   // Calculate pending submissions count for approvals queue badge
-  const pendingApprovalsCount = currentRole === "admin"
+  const pendingApprovalsCount = !isEmployee
     ? notifications.length // Using notifications length as active notifications queue
     : 0;
 
@@ -123,12 +129,12 @@ export default function AppShell({ children }: AppShellProps) {
         {/* Role Switcher Widget at bottom of sidebar */}
         <div className="mx-4 mt-auto p-4 bg-surface-white/10 border border-surface-white/10 rounded-xl">
           <div className="flex items-center space-x-3 mb-3">
-            <div className="w-8 h-8 rounded-full bg-primary-fixed-dim/30 flex items-center justify-center text-sm font-bold text-leaf-green">
-              {currentUser.name[0]}
+            <div className="w-8 h-8 rounded-full bg-primary-fixed-dim/30 flex items-center justify-center text-sm font-bold text-leaf-green uppercase">
+              {currentUser.fullName ? currentUser.fullName[0] : "?"}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-body-sm font-semibold text-surface-white truncate">{currentUser.name}</p>
-              <p className="text-xs text-surface-variant truncate capitalize">{currentRole} View</p>
+              <p className="text-body-sm font-semibold text-surface-white truncate">{currentUser.fullName}</p>
+              <p className="text-xs text-surface-variant truncate capitalize">{currentRoleName} View</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -253,21 +259,21 @@ export default function AppShell({ children }: AppShellProps) {
                 }}
                 className="flex items-center space-x-2 p-1.5 rounded-full hover:bg-surface-container-high transition-all cursor-pointer border border-border-subtle"
               >
-                <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm">
-                  {currentUser.name[0]}
+                <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm uppercase">
+                  {currentUser.fullName ? currentUser.fullName[0] : "?"}
                 </div>
               </button>
 
               {showProfileMenu && (
                 <div className="absolute right-0 mt-3 w-48 bg-surface-white border border-border-subtle rounded-xl shadow-xl z-50 p-2">
                   <div className="px-3 py-2 border-b border-border-subtle/50 mb-2">
-                    <p className="text-body-sm font-semibold text-on-surface truncate">{currentUser.name}</p>
+                    <p className="text-body-sm font-semibold text-on-surface truncate">{currentUser.fullName}</p>
                     <p className="text-xs text-outline truncate">{currentUser.email}</p>
                   </div>
                   <button
                     onClick={() => {
                       setShowProfileMenu(false);
-                      router.push("/");
+                      logout();
                     }}
                     className="w-full text-left px-3 py-2 text-body-sm text-error hover:bg-error-container/20 rounded-lg flex items-center gap-2 cursor-pointer transition-colors"
                   >

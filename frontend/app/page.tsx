@@ -2,32 +2,50 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EsgProvider, useEsg } from "@/context/EsgContext";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/rbac";
+import api from "@/lib/api";
 
 function LoginContent() {
   const router = useRouter();
-  const { switchRole } = useEsg();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email.toLowerCase().includes("admin")) {
-      switchRole("admin");
-      router.push("/dashboard?role=admin&view=org-dashboard");
-    } else {
-      switchRole("employee");
-      router.push("/dashboard?role=employee&view=employee-dashboard");
+    try {
+      const { data } = await api.post("/auth/login", { email, password });
+      login(data.data.token, data.data.employee);
+      
+      const userRole = data.data.employee.role;
+      if (can.manageOrg(userRole) || can.manageEmployees(userRole)) {
+        router.push("/dashboard?view=org-dashboard");
+      } else {
+        router.push("/dashboard?view=employee-dashboard");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Login failed. Please check your credentials.");
     }
   };
 
-  const handleQuickLogin = (role: "admin" | "employee") => {
-    switchRole(role);
-    if (role === "admin") {
-      router.push("/dashboard?role=admin&view=org-dashboard");
-    } else {
-      router.push("/dashboard?role=employee&view=employee-dashboard");
+  const handleQuickLogin = async (role: "admin" | "employee") => {
+    const defaultEmail = role === "admin" ? "admin@company.com" : "employee@company.com";
+    try {
+      const { data } = await api.post("/auth/login", { email: defaultEmail, password: "password123" });
+      login(data.data.token, data.data.employee);
+      
+      const userRole = data.data.employee.role;
+      if (can.manageOrg(userRole) || can.manageEmployees(userRole)) {
+        router.push("/dashboard?view=org-dashboard");
+      } else {
+        router.push("/dashboard?view=employee-dashboard");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Quick login failed.");
     }
   };
 
@@ -185,9 +203,5 @@ function LoginContent() {
 }
 
 export default function LoginPage() {
-  return (
-    <EsgProvider>
-      <LoginContent />
-    </EsgProvider>
-  );
+  return <LoginContent />;
 }

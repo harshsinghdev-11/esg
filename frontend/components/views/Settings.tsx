@@ -1,92 +1,132 @@
 "use client";
 
 import React, { useState } from "react";
-import { useEsg } from "@/context/EsgContext";
+import { useAuth } from "@/context/AuthContext";
+import { useDepartments, useEmployees, useCategories, useEsgConfig } from "@/hooks/useDomainData";
+import { departmentsService } from "@/services/departments.service";
+import { employeesService } from "@/services/employees.service";
+import { categoriesService } from "@/services/categories.service";
+import { settingsService } from "@/services/settings.service";
 
 interface SettingsViewsProps {
   activeTab: "departments" | "employees" | "categories" | "esg-config" | "notifications";
 }
 
 export default function SettingsViews({ activeTab }: SettingsViewsProps) {
-  const {
-    departments,
-    employees,
-    categories,
-    esgConfig,
-    createDepartment,
-    createEmployee,
-    addCategory,
-    updateEsgConfig,
-  } = useEsg();
+  const { currentUser } = useAuth();
+  
+  const { departments, refetch: refetchDepartments } = useDepartments();
+  const { employees, refetch: refetchEmployees } = useEmployees();
+  const { categories, refetch: refetchCategories } = useCategories();
+  const { esgConfig, refetch: refetchEsgConfig } = useEsgConfig();
 
   // Local Form states
   const [showDeptForm, setShowDeptForm] = useState(false);
   const [deptName, setDeptName] = useState("");
-  const [deptHead, setDeptHead] = useState("");
+  // We need to use employee ID for head, not just name.
+  // For simplicity we will pick the first admin or user if none specified, or just leave it null for now since it might need a dropdown
+  const [deptHead, setDeptHead] = useState(""); 
 
   const [showEmpForm, setShowEmpForm] = useState(false);
   const [empName, setEmpName] = useState("");
   const [empEmail, setEmpEmail] = useState("");
-  const [empRole, setEmpRole] = useState("");
-  const [empDept, setEmpDept] = useState("Operations");
+  const [empRole, setEmpRole] = useState("EMPLOYEE");
+  const [empDept, setEmpDept] = useState("");
 
   const [showCatForm, setShowCatForm] = useState(false);
-  const [catType, setCatType] = useState<"csr" | "challenge">("csr");
+  const [catType, setCatType] = useState<"CSR_ACTIVITY" | "CHALLENGE">("CSR_ACTIVITY");
   const [catName, setCatName] = useState("");
 
   // Config editing states
-  const [envW, setEnvW] = useState(esgConfig.envWeight);
-  const [socW, setSocW] = useState(esgConfig.socialWeight);
-  const [govW, setGovW] = useState(esgConfig.govWeight);
-  const [autoEm, setAutoEm] = useState(esgConfig.autoEmission);
-  const [evidReq, setEvidReq] = useState(esgConfig.evidenceReq);
-  const [badgeAw, setBadgeAw] = useState(esgConfig.autoBadge);
+  const [envW, setEnvW] = useState(esgConfig?.environmentalWeightPct || 40);
+  const [socW, setSocW] = useState(esgConfig?.socialWeightPct || 30);
+  const [govW, setGovW] = useState(esgConfig?.governanceWeightPct || 30);
+  const [autoEm, setAutoEm] = useState(esgConfig?.autoEmissionCalculationEnabled ?? true);
+  const [evidReq, setEvidReq] = useState(esgConfig?.evidenceRequiredEnabled ?? true);
+  const [badgeAw, setBadgeAw] = useState(esgConfig?.badgeAutoAwardEnabled ?? true);
+
+  // Sync config state when loaded
+  React.useEffect(() => {
+    if (esgConfig) {
+      setEnvW(Number(esgConfig.environmentalWeightPct));
+      setSocW(Number(esgConfig.socialWeightPct));
+      setGovW(Number(esgConfig.governanceWeightPct));
+      setAutoEm(esgConfig.autoEmissionCalculationEnabled);
+      setEvidReq(esgConfig.evidenceRequiredEnabled);
+      setBadgeAw(esgConfig.badgeAutoAwardEnabled);
+    }
+  }, [esgConfig]);
 
   // Handlers
-  const handleCreateDept = (e: React.FormEvent) => {
+  const handleCreateDept = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (deptName && deptHead) {
-      createDepartment(deptName, deptHead);
-      setDeptName("");
-      setDeptHead("");
-      setShowDeptForm(false);
+    if (deptName) {
+      try {
+        await departmentsService.create(deptName, deptHead || currentUser?.employeeId);
+        setDeptName("");
+        setDeptHead("");
+        setShowDeptForm(false);
+        refetchDepartments();
+      } catch (error) {
+        console.error(error);
+        alert("Failed to create department");
+      }
     }
   };
 
-  const handleCreateEmp = (e: React.FormEvent) => {
+  const handleCreateEmp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (empName && empEmail && empRole) {
-      createEmployee(empName, empEmail, empRole, empDept);
-      setEmpName("");
-      setEmpEmail("");
-      setEmpRole("");
-      setShowEmpForm(false);
+      try {
+        await employeesService.create(empName, empEmail, empRole, empDept);
+        setEmpName("");
+        setEmpEmail("");
+        setEmpRole("EMPLOYEE");
+        setShowEmpForm(false);
+        refetchEmployees();
+      } catch (error) {
+        console.error(error);
+        alert("Failed to create employee");
+      }
     }
   };
 
-  const handleCreateCat = (e: React.FormEvent) => {
+  const handleCreateCat = async (e: React.FormEvent) => {
     e.preventDefault();
     if (catName) {
-      addCategory(catType, catName);
-      setCatName("");
-      setShowCatForm(false);
+      try {
+        await categoriesService.create(catType, catName);
+        setCatName("");
+        setShowCatForm(false);
+        refetchCategories();
+      } catch (error) {
+        console.error(error);
+        alert("Failed to create category");
+      }
     }
   };
 
-  const handleSaveConfig = (e: React.FormEvent) => {
+  const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
     if (Number(envW) + Number(socW) + Number(govW) !== 100) {
       alert("Weights must sum up to exactly 100%!");
       return;
     }
-    updateEsgConfig({
-      envWeight: Number(envW),
-      socialWeight: Number(socW),
-      govWeight: Number(govW),
-      autoEmission: autoEm,
-      evidenceReq: evidReq,
-      autoBadge: badgeAw,
-    });
+    try {
+      await settingsService.updateConfig({
+        environmentalWeightPct: Number(envW),
+        socialWeightPct: Number(socW),
+        governanceWeightPct: Number(govW),
+        autoEmissionCalculationEnabled: autoEm,
+        evidenceRequiredEnabled: evidReq,
+        badgeAutoAwardEnabled: badgeAw,
+      });
+      alert("Configuration saved successfully!");
+      refetchEsgConfig();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to save configuration");
+    }
   };
 
   return (
@@ -151,10 +191,10 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
                 </tr>
               </thead>
               <tbody className="text-body-sm text-on-surface divide-y divide-border-subtle">
-                {departments.map((d) => (
-                  <tr key={d.id} className="hover:bg-surface-container-low/30 transition-colors">
+                {departments.map((d: any) => (
+                  <tr key={d.departmentId} className="hover:bg-surface-container-low/30 transition-colors">
                     <td className="p-4 font-semibold">{d.name}</td>
-                    <td className="p-4">{d.head}</td>
+                    <td className="p-4">{d.headEmployee?.fullName || "Unassigned"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -224,8 +264,9 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
                     onChange={(e) => setEmpDept(e.target.value)}
                     className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
                   >
-                    {departments.map((d) => (
-                      <option key={d.id} value={d.name}>
+                    <option value="">Select Department</option>
+                    {departments.map((d: any) => (
+                      <option key={d.departmentId} value={d.departmentId}>
                         {d.name}
                       </option>
                     ))}
@@ -252,12 +293,12 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
                 </tr>
               </thead>
               <tbody className="text-body-sm text-on-surface divide-y divide-border-subtle">
-                {employees.map((emp) => (
-                  <tr key={emp.id} className="hover:bg-surface-container-low/30 transition-colors">
-                    <td className="p-4 font-semibold">{emp.name}</td>
+                {employees.map((emp: any) => (
+                  <tr key={emp.employeeId} className="hover:bg-surface-container-low/30 transition-colors">
+                    <td className="p-4 font-semibold">{emp.fullName}</td>
                     <td className="p-4 text-outline">{emp.email}</td>
                     <td className="p-4 font-semibold text-primary">{emp.role}</td>
-                    <td className="p-4">{emp.department}</td>
+                    <td className="p-4">{emp.department?.name || "None"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -322,9 +363,9 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 shadow-sm">
               <h3 className="font-bold text-headline-sm text-primary mb-4">CSR Categories</h3>
               <ul className="divide-y divide-border-subtle text-body-sm">
-                {categories.csr.map((cat, idx) => (
-                  <li key={idx} className="py-2.5 flex justify-between items-center">
-                    <span className="font-semibold text-on-surface">{cat}</span>
+                {categories.csr.map((cat: any) => (
+                  <li key={cat.categoryId} className="py-2.5 flex justify-between items-center">
+                    <span className="font-semibold text-on-surface">{cat.name}</span>
                     <span className="text-[10px] text-outline uppercase font-semibold">Active</span>
                   </li>
                 ))}
@@ -335,9 +376,9 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 shadow-sm">
               <h3 className="font-bold text-headline-sm text-primary mb-4">Challenge Categories</h3>
               <ul className="divide-y divide-border-subtle text-body-sm">
-                {categories.challenge.map((cat, idx) => (
-                  <li key={idx} className="py-2.5 flex justify-between items-center">
-                    <span className="font-semibold text-on-surface">{cat}</span>
+                {categories.challenge.map((cat: any) => (
+                  <li key={cat.categoryId} className="py-2.5 flex justify-between items-center">
+                    <span className="font-semibold text-on-surface">{cat.name}</span>
                     <span className="text-[10px] text-outline uppercase font-semibold">Active</span>
                   </li>
                 ))}
