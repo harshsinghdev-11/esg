@@ -3,6 +3,7 @@
 import React, { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
+import AppIcon from "@/components/AppIcon";
 
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/rbac";
@@ -127,9 +128,7 @@ export default function DashboardPage() {
     <Suspense fallback={
       <div className="min-h-screen w-full flex items-center justify-center bg-surface">
         <div className="flex flex-col items-center gap-4">
-          <span className="material-symbols-outlined text-primary text-[48px] animate-spin">
-            progress_activity
-          </span>
+          <AppIcon name="progress_activity" className="text-primary animate-spin" size={48} />
           <p className="text-body-md text-outline font-semibold">Loading EcoSphere...</p>
         </div>
       </div>

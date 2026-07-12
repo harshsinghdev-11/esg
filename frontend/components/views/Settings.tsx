@@ -7,6 +7,7 @@ import { departmentsService } from "@/services/departments.service";
 import { employeesService } from "@/services/employees.service";
 import { categoriesService } from "@/services/categories.service";
 import { settingsService } from "@/services/settings.service";
+import AppIcon from "@/components/AppIcon";
 
 interface SettingsViewsProps {
   activeTab: "departments" | "employees" | "categories" | "esg-config" | "notifications";
@@ -143,7 +144,7 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
               onClick={() => setShowDeptForm(!showDeptForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              <AppIcon name="add" className="text-sm font-bold" />
               {showDeptForm ? "Cancel" : "Add Department"}
             </button>
           </div>
@@ -215,7 +216,7 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
               onClick={() => setShowEmpForm(!showEmpForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">person_add</span>
+              <AppIcon name="person_add" className="text-sm font-bold" />
               {showEmpForm ? "Cancel" : "Add Employee"}
             </button>
           </div>
@@ -319,7 +320,7 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
               onClick={() => setShowCatForm(!showCatForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              <AppIcon name="add" className="text-sm font-bold" />
               {showCatForm ? "Cancel" : "Add Category"}
             </button>
           </div>

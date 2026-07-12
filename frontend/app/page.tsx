@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/rbac";
 import api from "@/lib/api";
+import AppIcon from "@/components/AppIcon";
 
 function LoginContent() {
   const router = useRouter();
@@ -62,9 +63,7 @@ function LoginContent() {
           {/* Logo & Brand Header */}
           <div className="flex flex-col items-center mb-6 w-full text-center">
             <div className="mb-4 transition-all active:scale-[0.98] cursor-pointer">
-              <span className="material-symbols-outlined text-primary text-[56px] bg-surface-white shadow-sm border border-border-subtle rounded-xl p-2">
-                eco
-              </span>
+              <AppIcon name="eco" className="text-primary bg-surface-white shadow-sm border border-border-subtle rounded-xl p-2" size={56} />
             </div>
             <h1 className="font-bold text-headline-sm text-primary mb-2">EcoSphere</h1>
             <p className="text-body-sm text-on-surface-variant max-w-[280px]">
@@ -80,9 +79,7 @@ function LoginContent() {
                 Email Address
               </label>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">
-                  mail
-                </span>
+                <AppIcon name="mail" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" size={20} />
                 <input
                   type="email"
                   id="email"
@@ -110,9 +107,7 @@ function LoginContent() {
                 </a>
               </div>
               <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">
-                  lock
-                </span>
+                <AppIcon name="lock" className="absolute left-3 top-1/2 -translate-y-1/2 text-outline pointer-events-none" size={20} />
                 <input
                   type={showPassword ? "text" : "password"}
                   id="password"
@@ -129,9 +124,7 @@ function LoginContent() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface focus:outline-none focus:text-primary transition-colors"
                   aria-label="Toggle password visibility"
                 >
-                  <span className="material-symbols-outlined text-[20px]">
-                    {showPassword ? "visibility" : "visibility_off"}
-                  </span>
+                  <AppIcon name={showPassword ? "visibility" : "visibility_off"} className="text-current" size={20} />
                 </button>
               </div>
             </div>
@@ -155,7 +148,7 @@ function LoginContent() {
               className="w-full mt-2 bg-primary hover:bg-primary-container text-on-primary font-semibold text-label-md py-2.5 px-4 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
             >
               <span>Log In</span>
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+              <AppIcon name="arrow_forward" className="text-current" size={18} />
             </button>
           </form>
 
@@ -167,14 +160,14 @@ function LoginContent() {
                 onClick={() => handleQuickLogin("employee")}
                 className="w-full bg-surface-container-low border border-border-subtle hover:bg-surface-container-high text-primary font-semibold py-2 px-4 rounded-lg text-body-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span className="material-symbols-outlined text-sm">badge</span>
+                <AppIcon name="badge" className="text-current" size={16} />
                 <span>Log In as Employee (Alex)</span>
               </button>
               <button
                 onClick={() => handleQuickLogin("admin")}
                 className="w-full bg-deep-forest text-on-primary hover:bg-deep-forest/90 font-semibold py-2 px-4 rounded-lg text-body-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span className="material-symbols-outlined text-sm">shield_person</span>
+                <AppIcon name="shield_person" className="text-current" size={16} />
                 <span>Log In as Admin (Sarah)</span>
               </button>
             </div>

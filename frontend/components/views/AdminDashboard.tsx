@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useEsg } from "@/context/EsgContext";
+import AppIcon from "@/components/AppIcon";
 
 export default function OrgDashboardView() {
   const { departments, complianceIssues } = useEsg();
@@ -66,7 +67,7 @@ export default function OrgDashboardView() {
             </div>
           </div>
           <div className="mt-4 flex items-center gap-1.5 text-leaf-green">
-            <span className="material-symbols-outlined text-sm font-bold">trending_up</span>
+            <AppIcon name="trending_up" className="text-sm font-bold" />
             <span className="font-semibold text-label-md">+2.4% vs last quarter</span>
           </div>
         </div>
@@ -77,7 +78,7 @@ export default function OrgDashboardView() {
           <div className="bg-surface-container-lowest rounded-xl border border-border-subtle p-6 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4">
               <div className="w-10 h-10 rounded-full bg-[#E8F5E9] flex items-center justify-center text-[#2E7D32]">
-                <span className="material-symbols-outlined">eco</span>
+                <AppIcon name="eco" />
               </div>
               <span className="bg-[#E8F5E9] text-[#2E7D32] px-2 py-0.5 rounded-full font-semibold text-[10px] uppercase">
                 Environmental
@@ -86,7 +87,7 @@ export default function OrgDashboardView() {
             <div>
               <div className="font-bold text-headline-lg text-on-surface mb-1">{envScore}</div>
               <div className="flex items-center gap-1 text-[#2E7D32] font-semibold text-label-md">
-                <span className="material-symbols-outlined text-sm">arrow_upward</span>
+                <AppIcon name="arrow_upward" className="text-sm" />
                 <span>+4.1 vs Q1</span>
               </div>
             </div>
@@ -96,7 +97,7 @@ export default function OrgDashboardView() {
           <div className="bg-surface-container-lowest rounded-xl border border-border-subtle p-6 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4">
               <div className="w-10 h-10 rounded-full bg-[#E3F2FD] flex items-center justify-center text-[#1565C0]">
-                <span className="material-symbols-outlined">group</span>
+                <AppIcon name="group" />
               </div>
               <span className="bg-[#E3F2FD] text-[#1565C0] px-2 py-0.5 rounded-full font-semibold text-[10px] uppercase">
                 Social
@@ -105,7 +106,7 @@ export default function OrgDashboardView() {
             <div>
               <div className="font-bold text-headline-lg text-on-surface mb-1">{socialScore}</div>
               <div className="flex items-center gap-1 text-[#1565C0] font-semibold text-label-md">
-                <span className="material-symbols-outlined text-sm">arrow_upward</span>
+                <AppIcon name="arrow_upward" className="text-sm" />
                 <span>+1.2 vs Q1</span>
               </div>
             </div>
@@ -115,7 +116,7 @@ export default function OrgDashboardView() {
           <div className="bg-surface-container-lowest rounded-xl border border-border-subtle p-6 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow flex flex-col justify-between">
             <div className="flex justify-between items-start mb-4">
               <div className="w-10 h-10 rounded-full bg-[#FFF8E1] flex items-center justify-center text-[#F57F17]">
-                <span className="material-symbols-outlined">account_balance</span>
+                <AppIcon name="account_balance" />
               </div>
               <span className="bg-[#FFF8E1] text-[#F57F17] px-2 py-0.5 rounded-full font-semibold text-[10px] uppercase">
                 Governance
@@ -124,7 +125,7 @@ export default function OrgDashboardView() {
             <div>
               <div className="font-bold text-headline-lg text-on-surface mb-1">{govScore}</div>
               <div className="flex items-center gap-1 text-error font-semibold text-label-md">
-                <span className="material-symbols-outlined text-sm">arrow_downward</span>
+                <AppIcon name="arrow_downward" className="text-sm" />
                 <span>-0.8 vs Q1</span>
               </div>
             </div>
@@ -224,7 +225,7 @@ export default function OrgDashboardView() {
           <div className="space-y-4 flex-grow overflow-y-auto max-h-[220px] hide-scrollbar">
             {/* Alert 1 */}
             <div className="flex items-start gap-3 p-3 rounded-lg border border-error-container bg-error-container/10">
-              <span className="material-symbols-outlined text-error mt-0.5">warning</span>
+              <AppIcon name="warning" className="text-error mt-0.5" />
               <div>
                 <div className="font-semibold text-label-md text-on-surface mb-1">Waste Audit Overdue</div>
                 <div className="text-body-sm text-on-surface-variant">Manufacturing Facility Plant A</div>
@@ -237,9 +238,10 @@ export default function OrgDashboardView() {
             {/* Alert 2 */}
             {complianceIssues.filter(ci => ci.status === "Open").map((ci, index) => (
               <div key={ci.id} className="flex items-start gap-3 p-3 rounded-lg border border-error-container bg-error-container/5">
-                <span className="material-symbols-outlined text-error mt-0.5">
-                  {ci.severity === "Critical" ? "gavel" : "assignment_late"}
-                </span>
+                <AppIcon
+                  name={ci.severity === "Critical" ? "gavel" : "warning"}
+                  className="text-error mt-0.5"
+                />
                 <div>
                   <div className="font-semibold text-label-md text-on-surface mb-1 truncate max-w-[180px]">{ci.title}</div>
                   <div className="text-body-sm text-on-surface-variant">Owner: {ci.owner}</div>

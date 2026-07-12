@@ -3,6 +3,7 @@
 import React from "react";
 import { useEsg } from "@/context/EsgContext";
 import { useRouter } from "next/navigation";
+import AppIcon from "@/components/AppIcon";
 
 export default function EmployeeDashboardView() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function EmployeeDashboardView() {
           onClick={() => router.push("/dashboard?role=employee&view=employee-challenges")}
           className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-semibold text-label-md hover:bg-primary-container transition-colors shadow-sm flex items-center gap-2 cursor-pointer active:scale-95"
         >
-          <span className="material-symbols-outlined text-sm font-bold">add</span> Log Activity
+          <AppIcon name="add" className="text-sm font-bold" /> Log Activity
         </button>
       </div>
 
@@ -76,7 +77,7 @@ export default function EmployeeDashboardView() {
               </div>
               
               <div className="shrink-0 text-center bg-surface-container-low p-4 rounded-lg border border-border-subtle min-w-[120px] w-full md:w-auto">
-                <span className="material-symbols-outlined text-tertiary text-3xl mb-1">stars</span>
+                <AppIcon name="stars" className="text-tertiary text-3xl mb-1" />
                 <div className="font-bold text-headline-sm text-on-surface">
                   {currentUser.points.toLocaleString()}
                 </div>
@@ -99,7 +100,7 @@ export default function EmployeeDashboardView() {
                         key={badgeId}
                         className="flex items-center gap-2 bg-surface-white border border-border-subtle rounded-lg px-3 py-1.5 shrink-0 shadow-sm"
                       >
-                        <span className="material-symbols-outlined text-[#F57F17]">{badgeObj.icon}</span>
+                        <AppIcon name={badgeObj.icon} className="text-[#F57F17]" />
                         <div className="text-left">
                           <p className="text-xs font-bold text-on-surface leading-tight">{badgeObj.name}</p>
                           <p className="text-[9px] text-outline leading-tight">Unlocked</p>
@@ -126,7 +127,7 @@ export default function EmployeeDashboardView() {
 
             {activeChallengesSubmissions.length === 0 ? (
               <div className="text-center py-8 bg-surface-container-low/30 border border-dashed border-border-subtle rounded-xl">
-                <span className="material-symbols-outlined text-outline text-4xl mb-2">rocket_launch</span>
+                <AppIcon name="rocket_launch" className="text-outline text-4xl mb-2" />
                 <p className="text-body-sm text-on-surface-variant font-semibold">No active challenges</p>
                 <p className="text-xs text-outline mt-1 mb-4">Join active challenges to start earning XP and rewards.</p>
                 <button
@@ -191,7 +192,7 @@ export default function EmployeeDashboardView() {
             {/* Stat item 1 */}
             <div className="flex items-center gap-4 p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50">
               <div className="w-10 h-10 rounded-full bg-[#E8F5E9] flex items-center justify-center text-[#2E7D32] shrink-0">
-                <span className="material-symbols-outlined">volunteer_activism</span>
+                <AppIcon name="volunteer_activism" />
               </div>
               <div>
                 <div className="font-bold text-body-lg text-on-surface">{completedCsrCount}</div>
@@ -202,7 +203,7 @@ export default function EmployeeDashboardView() {
             {/* Stat item 2 */}
             <div className="flex items-center gap-4 p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50">
               <div className="w-10 h-10 rounded-full bg-[#E3F2FD] flex items-center justify-center text-[#1565C0] shrink-0">
-                <span className="material-symbols-outlined">trending_up</span>
+                <AppIcon name="trending_up" />
               </div>
               <div>
                 <div className="font-bold text-body-lg text-on-surface">8.4%</div>
@@ -213,7 +214,7 @@ export default function EmployeeDashboardView() {
             {/* Stat item 3 */}
             <div className="flex items-center gap-4 p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50">
               <div className="w-10 h-10 rounded-full bg-[#FFF8E1] flex items-center justify-center text-[#F57F17] shrink-0">
-                <span className="material-symbols-outlined">gavel</span>
+                <AppIcon name="gavel" />
               </div>
               <div>
                 <div className="font-bold text-body-lg text-on-surface">
@@ -228,7 +229,7 @@ export default function EmployeeDashboardView() {
           {pendingPolicyCount > 0 && (
             <div className="bg-error-container/10 border border-error-container rounded-xl p-5 shadow-sm flex flex-col justify-between">
               <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-error shrink-0 mt-0.5">warning</span>
+                <AppIcon name="warning" className="text-error shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-bold text-body-md text-on-error-container">Policy Acknowledgment Needed</h4>
                   <p className="text-xs text-on-surface-variant mt-1">

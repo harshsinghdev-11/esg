@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEsg } from "@/context/EsgContext";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/rbac";
+import AppIcon from "@/components/AppIcon";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -50,6 +51,8 @@ export default function AppShell({ children }: AppShellProps) {
     clearNotification,
     clearAllNotifications,
   } = useEsg();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   if (loading || !currentUser) {
     return null;
@@ -57,10 +60,9 @@ export default function AppShell({ children }: AppShellProps) {
 
   const role = currentUser.role;
   const isEmployee = !can.manageOrg(role) && !can.manageEmployees(role);
+  const currentRole = isEmployee ? "employee" : "admin";
   const currentRoleName = isEmployee ? "employee" : "admin";
   const currentView = searchParams.get("view") || (isEmployee ? "employee-dashboard" : "org-dashboard");
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const navigateTo = (viewName: string) => {
     router.push(`/dashboard?view=${viewName}`);
@@ -90,7 +92,7 @@ export default function AppShell({ children }: AppShellProps) {
         {/* Branding */}
         <div className="px-6 mb-8 flex items-center space-x-3">
           <div className="w-10 h-10 rounded-full bg-surface-white/20 flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-surface-white">eco</span>
+            <AppIcon name="eco" className="text-surface-white" />
           </div>
           <div>
             <h1 className="font-bold text-headline-sm leading-tight">EcoSphere</h1>
@@ -113,7 +115,7 @@ export default function AppShell({ children }: AppShellProps) {
                 }`}
               >
                 <div className="flex items-center space-x-3">
-                  <span className="material-symbols-outlined text-[20px]">{link.icon}</span>
+                  <AppIcon name={link.icon} className="text-current" />
                   <span>{link.name}</span>
                 </div>
                 {link.badge && pendingApprovalsCount > 0 && (
@@ -169,7 +171,7 @@ export default function AppShell({ children }: AppShellProps) {
             {/* Quick Breadcrumbs */}
             <div className="text-body-sm text-on-surface-variant font-semibold capitalize flex items-center gap-1.5">
               <span>{currentRole}</span>
-              <span className="material-symbols-outlined text-sm">chevron_right</span>
+              <AppIcon name="chevron_right" className="text-current" size={16} />
               <span className="text-primary font-bold">{currentView.replace("employee-", "").replace("-dashboard", "").replace("-", " ")}</span>
             </div>
           </div>
@@ -184,7 +186,7 @@ export default function AppShell({ children }: AppShellProps) {
                 }}
                 className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container-high cursor-pointer relative"
               >
-                <span className="material-symbols-outlined text-[22px]">notifications</span>
+                <AppIcon name="notifications" className="text-current" />
                 {unreadCount > 0 && (
                   <span className="absolute top-1.5 right-1.5 bg-error text-on-error w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center animate-pulse">
                     {unreadCount}
@@ -218,7 +220,7 @@ export default function AppShell({ children }: AppShellProps) {
                           className="flex items-start gap-2.5 p-2 rounded-lg bg-surface-container-low/50 hover:bg-surface-container-low transition-colors"
                         >
                           <span
-                            className={`material-symbols-outlined text-[18px] shrink-0 mt-0.5 ${
+                            className={`shrink-0 mt-0.5 ${
                               notif.type === "success"
                                 ? "text-leaf-green"
                                 : notif.type === "warning"
@@ -226,11 +228,11 @@ export default function AppShell({ children }: AppShellProps) {
                                 : "text-primary"
                             }`}
                           >
-                            {notif.type === "success"
-                              ? "check_circle"
-                              : notif.type === "warning"
-                              ? "warning"
-                              : "info"}
+                            <AppIcon
+                              name={notif.type === "success" ? "check_circle" : notif.type === "warning" ? "warning" : "assessment"}
+                              className="text-current"
+                              size={18}
+                            />
                           </span>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs text-on-surface leading-normal">{notif.text}</p>
@@ -240,7 +242,7 @@ export default function AppShell({ children }: AppShellProps) {
                             onClick={() => clearNotification(notif.id)}
                             className="text-outline hover:text-on-surface shrink-0 cursor-pointer"
                           >
-                            <span className="material-symbols-outlined text-sm">close</span>
+                            <AppIcon name="close" className="text-current" size={16} />
                           </button>
                         </div>
                       ))}
@@ -277,7 +279,7 @@ export default function AppShell({ children }: AppShellProps) {
                     }}
                     className="w-full text-left px-3 py-2 text-body-sm text-error hover:bg-error-container/20 rounded-lg flex items-center gap-2 cursor-pointer transition-colors"
                   >
-                    <span className="material-symbols-outlined text-sm">logout</span>
+                    <AppIcon name="logout" className="text-current" size={16} />
                     <span>Sign Out</span>
                   </button>
                 </div>
