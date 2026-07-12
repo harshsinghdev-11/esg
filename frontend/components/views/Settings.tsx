@@ -1,0 +1,485 @@
+"use client";
+
+import React, { useState } from "react";
+import { useEsg } from "@/context/EsgContext";
+
+interface SettingsViewsProps {
+  activeTab: "departments" | "employees" | "categories" | "esg-config" | "notifications";
+}
+
+export default function SettingsViews({ activeTab }: SettingsViewsProps) {
+  const {
+    departments,
+    employees,
+    categories,
+    esgConfig,
+    createDepartment,
+    createEmployee,
+    addCategory,
+    updateEsgConfig,
+  } = useEsg();
+
+  // Local Form states
+  const [showDeptForm, setShowDeptForm] = useState(false);
+  const [deptName, setDeptName] = useState("");
+  const [deptHead, setDeptHead] = useState("");
+
+  const [showEmpForm, setShowEmpForm] = useState(false);
+  const [empName, setEmpName] = useState("");
+  const [empEmail, setEmpEmail] = useState("");
+  const [empRole, setEmpRole] = useState("");
+  const [empDept, setEmpDept] = useState("Operations");
+
+  const [showCatForm, setShowCatForm] = useState(false);
+  const [catType, setCatType] = useState<"csr" | "challenge">("csr");
+  const [catName, setCatName] = useState("");
+
+  // Config editing states
+  const [envW, setEnvW] = useState(esgConfig.envWeight);
+  const [socW, setSocW] = useState(esgConfig.socialWeight);
+  const [govW, setGovW] = useState(esgConfig.govWeight);
+  const [autoEm, setAutoEm] = useState(esgConfig.autoEmission);
+  const [evidReq, setEvidReq] = useState(esgConfig.evidenceReq);
+  const [badgeAw, setBadgeAw] = useState(esgConfig.autoBadge);
+
+  // Handlers
+  const handleCreateDept = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (deptName && deptHead) {
+      createDepartment(deptName, deptHead);
+      setDeptName("");
+      setDeptHead("");
+      setShowDeptForm(false);
+    }
+  };
+
+  const handleCreateEmp = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (empName && empEmail && empRole) {
+      createEmployee(empName, empEmail, empRole, empDept);
+      setEmpName("");
+      setEmpEmail("");
+      setEmpRole("");
+      setShowEmpForm(false);
+    }
+  };
+
+  const handleCreateCat = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (catName) {
+      addCategory(catType, catName);
+      setCatName("");
+      setShowCatForm(false);
+    }
+  };
+
+  const handleSaveConfig = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (Number(envW) + Number(socW) + Number(govW) !== 100) {
+      alert("Weights must sum up to exactly 100%!");
+      return;
+    }
+    updateEsgConfig({
+      envWeight: Number(envW),
+      socialWeight: Number(socW),
+      govWeight: Number(govW),
+      autoEmission: autoEm,
+      evidenceReq: evidReq,
+      autoBadge: badgeAw,
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* 1. Departments settings */}
+      {activeTab === "departments" && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="font-bold text-headline-sm md:text-headline-md text-on-surface">Organization Departments</h2>
+              <p className="text-body-sm text-on-surface-variant mt-1">Manage active departments and assigned division heads</p>
+            </div>
+            <button
+              onClick={() => setShowDeptForm(!showDeptForm)}
+              className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              {showDeptForm ? "Cancel" : "Add Department"}
+            </button>
+          </div>
+
+          {showDeptForm && (
+            <form onSubmit={handleCreateDept} className="glass-panel border border-border-subtle rounded-xl p-6 max-w-md space-y-4">
+              <h3 className="font-semibold text-body-md text-primary">Create New Department</h3>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Department Name</label>
+                <input
+                  type="text"
+                  required
+                  value={deptName}
+                  onChange={(e) => setDeptName(e.target.value)}
+                  placeholder="e.g. Manufacturing Plant B"
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Department Head</label>
+                <input
+                  type="text"
+                  required
+                  value={deptHead}
+                  onChange={(e) => setDeptHead(e.target.value)}
+                  placeholder="e.g. Jane Doe"
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Save Department
+              </button>
+            </form>
+          )}
+
+          <div className="bg-surface-container-lowest border border-border-subtle rounded-xl shadow-sm overflow-hidden">
+            <table className="w-full border-collapse text-left">
+              <thead className="bg-surface-container-low font-semibold text-label-md text-on-surface-variant border-b border-border-subtle">
+                <tr>
+                  <th className="p-4 py-3">Department Name</th>
+                  <th className="p-4 py-3">Division Head / Manager</th>
+                </tr>
+              </thead>
+              <tbody className="text-body-sm text-on-surface divide-y divide-border-subtle">
+                {departments.map((d) => (
+                  <tr key={d.id} className="hover:bg-surface-container-low/30 transition-colors">
+                    <td className="p-4 font-semibold">{d.name}</td>
+                    <td className="p-4">{d.head}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Employees settings */}
+      {activeTab === "employees" && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="font-bold text-headline-sm md:text-headline-md text-on-surface">Employee Roster</h2>
+              <p className="text-body-sm text-on-surface-variant mt-1">Manage and assign corporate user accounts & roles</p>
+            </div>
+            <button
+              onClick={() => setShowEmpForm(!showEmpForm)}
+              className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm font-bold">person_add</span>
+              {showEmpForm ? "Cancel" : "Add Employee"}
+            </button>
+          </div>
+
+          {showEmpForm && (
+            <form onSubmit={handleCreateEmp} className="glass-panel border border-border-subtle rounded-xl p-6 max-w-md space-y-4">
+              <h3 className="font-semibold text-body-md text-primary">Onboard New Employee</h3>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  value={empName}
+                  onChange={(e) => setEmpName(e.target.value)}
+                  placeholder="e.g. Alex Rivera"
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Email Address</label>
+                <input
+                  type="email"
+                  required
+                  value={empEmail}
+                  onChange={(e) => setEmpEmail(e.target.value)}
+                  placeholder="name@company.com"
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Role Designation</label>
+                  <input
+                    type="text"
+                    required
+                    value={empRole}
+                    onChange={(e) => setEmpRole(e.target.value)}
+                    placeholder="e.g. Operations Manager"
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Department</label>
+                  <select
+                    value={empDept}
+                    onChange={(e) => setEmpDept(e.target.value)}
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  >
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.name}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <button
+                type="submit"
+                className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Save Employee Account
+              </button>
+            </form>
+          )}
+
+          <div className="bg-surface-container-lowest border border-border-subtle rounded-xl shadow-sm overflow-hidden">
+            <table className="w-full border-collapse text-left">
+              <thead className="bg-surface-container-low font-semibold text-label-md text-on-surface-variant border-b border-border-subtle">
+                <tr>
+                  <th className="p-4 py-3">Employee Name</th>
+                  <th className="p-4 py-3">Email Address</th>
+                  <th className="p-4 py-3">Designated Role</th>
+                  <th className="p-4 py-3">Department</th>
+                </tr>
+              </thead>
+              <tbody className="text-body-sm text-on-surface divide-y divide-border-subtle">
+                {employees.map((emp) => (
+                  <tr key={emp.id} className="hover:bg-surface-container-low/30 transition-colors">
+                    <td className="p-4 font-semibold">{emp.name}</td>
+                    <td className="p-4 text-outline">{emp.email}</td>
+                    <td className="p-4 font-semibold text-primary">{emp.role}</td>
+                    <td className="p-4">{emp.department}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 3. Category Settings */}
+      {activeTab === "categories" && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="font-bold text-headline-sm md:text-headline-md text-on-surface">Category Settings</h2>
+              <p className="text-body-sm text-on-surface-variant mt-1">Configure categories for CSR activities and challenges</p>
+            </div>
+            <button
+              onClick={() => setShowCatForm(!showCatForm)}
+              className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              {showCatForm ? "Cancel" : "Add Category"}
+            </button>
+          </div>
+
+          {showCatForm && (
+            <form onSubmit={handleCreateCat} className="glass-panel border border-border-subtle rounded-xl p-6 max-w-md space-y-4">
+              <h3 className="font-semibold text-body-md text-primary">Add Category Label</h3>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Registry Type</label>
+                <select
+                  value={catType}
+                  onChange={(e) => setCatType(e.target.value as any)}
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                >
+                  <option value="csr">CSR Activities</option>
+                  <option value="challenge">Gamification Challenges</option>
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Category Name</label>
+                <input
+                  type="text"
+                  required
+                  value={catName}
+                  onChange={(e) => setCatName(e.target.value)}
+                  placeholder="e.g. Energy Saving"
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <button
+                type="submit"
+                className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Save Category
+              </button>
+            </form>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* CSR Categories */}
+            <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 shadow-sm">
+              <h3 className="font-bold text-headline-sm text-primary mb-4">CSR Categories</h3>
+              <ul className="divide-y divide-border-subtle text-body-sm">
+                {categories.csr.map((cat, idx) => (
+                  <li key={idx} className="py-2.5 flex justify-between items-center">
+                    <span className="font-semibold text-on-surface">{cat}</span>
+                    <span className="text-[10px] text-outline uppercase font-semibold">Active</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Challenge Categories */}
+            <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 shadow-sm">
+              <h3 className="font-bold text-headline-sm text-primary mb-4">Challenge Categories</h3>
+              <ul className="divide-y divide-border-subtle text-body-sm">
+                {categories.challenge.map((cat, idx) => (
+                  <li key={idx} className="py-2.5 flex justify-between items-center">
+                    <span className="font-semibold text-on-surface">{cat}</span>
+                    <span className="text-[10px] text-outline uppercase font-semibold">Active</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. ESG Configuration weights & toggles */}
+      {activeTab === "esg-config" && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="font-bold text-headline-sm md:text-headline-md text-on-surface">ESG Weights & Configuration</h2>
+            <p className="text-body-sm text-on-surface-variant mt-1">Configure scoring percentages and operational settings</p>
+          </div>
+
+          <form onSubmit={handleSaveConfig} className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 shadow-sm space-y-6 max-w-2xl">
+            <h3 className="font-bold text-body-md text-primary">Score Weights Balance (Sum must equal 100%)</h3>
+            
+            <div className="grid grid-cols-3 gap-6">
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Environmental (%)</label>
+                <input
+                  type="number"
+                  required
+                  value={envW}
+                  onChange={(e) => setEnvW(Number(e.target.value))}
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Social (%)</label>
+                <input
+                  type="number"
+                  required
+                  value={socW}
+                  onChange={(e) => setSocW(Number(e.target.value))}
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Governance (%)</label>
+                <input
+                  type="number"
+                  required
+                  value={govW}
+                  onChange={(e) => setGovW(Number(e.target.value))}
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+
+            <h3 className="font-bold text-body-md text-primary pt-4 border-t border-border-subtle">Operational Features</h3>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50">
+                <div>
+                  <h4 className="font-bold text-body-sm text-on-surface">Auto-calculate Carbon Emissions</h4>
+                  <p className="text-xs text-outline">Compute operational transactions automatically where factors match.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={autoEm}
+                  onChange={(e) => setAutoEm(e.target.checked)}
+                  className="h-5 w-5 text-primary focus:ring-primary border-border-subtle rounded cursor-pointer"
+                />
+              </div>
+
+              <div className="flex justify-between items-center p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50">
+                <div>
+                  <h4 className="font-bold text-body-sm text-on-surface">Require Evidence Upload</h4>
+                  <p className="text-xs text-outline">Forces employee challenges to upload an attachment for validation.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={evidReq}
+                  onChange={(e) => setEvidReq(e.target.checked)}
+                  className="h-5 w-5 text-primary focus:ring-primary border-border-subtle rounded cursor-pointer"
+                />
+              </div>
+
+              <div className="flex justify-between items-center p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50">
+                <div>
+                  <h4 className="font-bold text-body-sm text-on-surface">Badge Auto-Awarding</h4>
+                  <p className="text-xs text-outline">Enables background triggers to unlock badges instantly on approvals.</p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={badgeAw}
+                  onChange={(e) => setBadgeAw(e.target.checked)}
+                  className="h-5 w-5 text-primary focus:ring-primary border-border-subtle rounded cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="bg-primary text-on-primary hover:bg-primary-container px-6 py-2.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all"
+            >
+              Save Configurations
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* 5. Notification Toggles settings */}
+      {activeTab === "notifications" && (
+        <div className="space-y-6">
+          <div>
+            <h2 className="font-bold text-headline-sm md:text-headline-md text-on-surface">Notification Settings</h2>
+            <p className="text-body-sm text-on-surface-variant mt-1">Configure in-app event trigger notifications</p>
+          </div>
+
+          <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 shadow-sm space-y-4 max-w-xl">
+            <h3 className="font-bold text-body-md text-primary mb-2">Toggle Trigger Events</h3>
+            <label className="flex items-center justify-between p-3 bg-surface-container-low/40 rounded-lg border border-border-subtle cursor-pointer hover:bg-surface-container-low transition-colors">
+              <div>
+                <span className="font-bold text-body-sm text-on-surface">ESG Policy Releases</span>
+                <p className="text-xs text-outline mt-0.5">Notify employees when new policy acknowledgments are required.</p>
+              </div>
+              <input type="checkbox" defaultChecked className="h-4 w-4 text-primary rounded" />
+            </label>
+
+            <label className="flex items-center justify-between p-3 bg-surface-container-low/40 rounded-lg border border-border-subtle cursor-pointer hover:bg-surface-container-low transition-colors">
+              <div>
+                <span className="font-bold text-body-sm text-on-surface">Challenge Status Changes</span>
+                <p className="text-xs text-outline mt-0.5">Notify enrolled users when challenges start or reach review.</p>
+              </div>
+              <input type="checkbox" defaultChecked className="h-4 w-4 text-primary rounded" />
+            </label>
+
+            <label className="flex items-center justify-between p-3 bg-surface-container-low/40 rounded-lg border border-border-subtle cursor-pointer hover:bg-surface-container-low transition-colors">
+              <div>
+                <span className="font-bold text-body-sm text-on-surface">Approval Queue Outcomes</span>
+                <p className="text-xs text-outline mt-0.5">Notify employees when their submitted proof is approved or rejected.</p>
+              </div>
+              <input type="checkbox" defaultChecked className="h-4 w-4 text-primary rounded" />
+            </label>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
