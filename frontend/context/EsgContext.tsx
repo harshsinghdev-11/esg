@@ -243,6 +243,7 @@ const EsgContext = createContext<EsgContextType | undefined>(undefined);
 
 export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User>(defaultUser);
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [categories, setCategories] = useState<{ csr: string[]; challenge: string[] }>({ csr: [], challenge: [] });
@@ -272,7 +273,19 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Load from local storage or set defaults
   useEffect(() => {
-    const local = localStorage.getItem("ecosphere_state");
+    let resetDb = false;
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("reset") === "true") {
+        localStorage.removeItem("ecosphere_state");
+        resetDb = true;
+        const cleanSearch = window.location.search.replace(/[?&]reset=true/, "").replace(/^\?$/, "");
+        const newUrl = window.location.pathname + cleanSearch;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+
+    const local = resetDb ? null : localStorage.getItem("ecosphere_state");
     if (local) {
       try {
         const data = JSON.parse(local);
@@ -303,6 +316,7 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setAcknowledgements(data.acknowledgements || []);
         setUnlockedBadges(data.unlockedBadges || []);
         setNotifications(data.notifications || []);
+        setHasLoaded(true);
         return;
       } catch (e) {
         console.error("Error loading local storage state, using defaults", e);
@@ -384,10 +398,12 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setNotifications([
       { id: "not_1", text: "New policy 'Energy Conservation Directives' requires acknowledgement.", time: "10 mins ago", read: false, type: "warning" },
     ]);
+    setHasLoaded(true);
   }, []);
 
   // Save changes to local storage whenever state changes
   useEffect(() => {
+    if (!hasLoaded) return;
     if (currentUser.id === "emp_1" || currentUser.id === "adm_1") {
       const state = {
         currentUser,
