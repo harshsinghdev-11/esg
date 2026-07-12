@@ -1,0 +1,103 @@
+# EcoSphere Frontend ↔ Backend Integration Plan
+
+## Step 1: Analyze the backend
+
+*   **Framework/Language:** Node.js, Express, TypeScript, PostgreSQL (via Prisma ORM).
+*   **Entry Point & Structure:**
+    *   **Entry point:** `backend/src/index.ts`.
+    *   **Folder structure:** Organized by module in `backend/src/modules/` (e.g., `auth`, `departments`, `employees`). Each module follows a strict layered architecture: `routes.ts`, `controller.ts`, `service.ts`, `types.ts`.
+*   **API Routes/Endpoints:** Base URL is `/api/v1`. The application exposes 23 distinct REST modules, including:
+    *   **Auth:** `POST /auth/login`, `POST /auth/register`, `POST /auth/refresh`, `GET /auth/me`
+    *   **Master Data:** `/departments`, `/employees`, `/categories`, `/emission-factors`, `/policies`, `/badges`, `/rewards`
+    *   **Transactions:** `/operational-records`, `/carbon-transactions`, `/csr-activities`, `/participations`, `/challenges`, `/challenge-participations`, `/audits`, `/compliance-issues`
+    *   **Analytics/Dashboards:** `/leaderboard`, `/scores/*`, `/dashboard/*`, `/reports/*`
+    *   *Standard HTTP methods are used (GET, POST, PATCH, DELETE). List endpoints support `?page=` and `?limit=` query params.*
+*   **Authentication/Authorization:** Uses JWT (access and refresh tokens). The auth middleware decodes the token and attaches `req.user` (including `organizationId`, `employeeId`, and `role`). All DB queries are scoped by `organizationId` (multi-tenant). Routes are protected by `rbac.middleware.ts` which checks roles (`SUPER_ADMIN`, `ESG_MANAGER`, `DEPT_HEAD`, `AUDITOR`, `EMPLOYEE`).
+*   **Environment Variables:** `.env` file containing `DATABASE_URL`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `PORT` (defaults to 4000), `NODE_ENV`.
+*   **CORS Configuration:** Currently `app.use(cors())` is applied in `index.ts` with default settings (allows all origins).
+*   **Data Models/Schemas:** Defined in PostgreSQL via Prisma (`schema.prisma`). Validation is done via `zod` schemas in `types.ts` before hitting controllers. Responses are transformed to camelCase automatically via Prisma.
+
+## Step 2: Analyze the frontend
+
+*   **Framework:** Next.js 16 (App Router), React 19, TypeScript, TailwindCSS.
+*   **Folder Structure & Routing:**
+    *   `frontend/app/`: Next.js routing (currently just `page.tsx`).
+    *   `frontend/components/`: Reusable UI components and `AppShell.tsx`.
+    *   `frontend/components/views/`: Contains page content (e.g., `AdminDashboard.tsx`, `Environmental.tsx`, `Gamification.tsx`).
+    *   `frontend/context/`: Contains `EsgContext.tsx` which manages the entire app state locally.
+*   **Data Fetching Approach:** Currently **None**. The app relies entirely on mock data initialized and manipulated within `EsgContext.tsx`. There is no HTTP client installed.
+*   **Mock Data Usage:** `EsgContext.tsx` defines static mock arrays for `departments`, `employees`, `categories`, `esgConfig`, `emissionFactors`, `challenges`, `csrActivities`, `badges`, etc. All views (`AdminDashboard`, `EmployeeDashboard`, `Environmental`, `Social`, `Governance`, `Gamification`, `Settings`, `Reports`) read from and write to this local Context state.
+*   **State Management:** React Context API (`EsgContext`) combined with `localStorage` persistence.
+*   **Config:** No `.env` variables or proxy setups exist yet for API communication.
+
+## Step 3: Gap analysis
+
+*   **Data Shape Mismatches:**
+    *   **Naming conventions:** Frontend mock data uses loose types with missing fields compared to the backend. Example: Frontend `Employee.department` is a string (name), while backend returns `departmentId` (UUID).
+    *   **User Roles:** Frontend currently switches between a generic `"admin"` and `"employee"` string. The backend defines 5 specific roles: `SUPER_ADMIN`, `ESG_MANAGER`, `DEPT_HEAD`, `AUDITOR`, `EMPLOYEE`.
+    *   **Merged vs Split Types:** Frontend uses a single `Submission` type for both CSR and Challenge participations. The backend splits these into `Participation` (for CSR) and `ChallengeParticipation`.
+    *   **Level Calculation:** Frontend relies on a `level` property for employees. Backend only stores `total_xp`; the frontend will need to compute levels based on XP.
+    *   **Badges:** Frontend mock `Badge` has a simple `rule: string`. The backend uses an `unlock_rule` JSONB field which requires a proper UI structure to build.
+*   **Missing Backend Endpoints:** The backend appears to have all necessary endpoints. However, file upload mechanisms for `proof_url` in participations are not explicitly handled by a dedicated file upload endpoint; we need to clarify if we upload via CDN or if the backend will handle multipart uploads.
+*   **Unused Backend Endpoints:** Manual trigger endpoints for background jobs (e.g., `POST /operational-records/:id/calculate`), and detailed reporting endpoints are not yet represented in the frontend UI.
+*   **Authentication Flow:** Mismatch is severe. Frontend mocks login via a simple email check and switches routing locally. Backend uses a secure `/auth/login` returning JWTs. Frontend needs token storage, interceptors, and a real `/auth/me` call to determine user identity and role.
+*   **Blocking Issues (CORS & Env):**
+    *   Frontend needs Axios installed and configured.
+    *   Frontend needs `.env.local` with `NEXT_PUBLIC_API_URL`.
+    *   Backend CORS should be explicitly configured to allow the frontend's origin and credentials.
+
+## Step 4: Produce an integration plan
+
+> [!IMPORTANT]
+> **Open Questions before implementation:**
+> 1. **File Uploads:** For `proof_url` in CSR and Challenges, should we implement a local file upload to a backend endpoint, or mock the upload and send a dummy URL for this sprint?
+> 2. **Employee Dashboard Routing:** Currently, frontend switches views via URL query params (`?role=employee`). Should we split this into actual routes (`/dashboard/admin` and `/dashboard/employee`), or keep conditional rendering based on JWT role?
+> 3. **Level Calculation:** Does a standard formula exist for calculating `level` from `total_xp` on the frontend, or should we use `Math.floor(total_xp / 100)`?
+
+### 1. Foundation & Configuration (Auth First)
+*   **Files to change:** `frontend/package.json`, `backend/src/index.ts`, `frontend/lib/api.ts` (NEW), `frontend/.env.local` (NEW).
+*   **Change:**
+    *   Install `axios` on the frontend.
+    *   Create `.env.local` with `NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1`.
+    *   Create `api.ts` Axios instance with interceptors to attach `Bearer ${token}` and handle 401 token refreshes.
+    *   Update backend `index.ts` CORS config to explicitly allow `http://localhost:3000` (Next.js default).
+*   **Why:** Establishes the secure communication pipeline between frontend and backend.
+
+### 2. Authentication & Authorization Flow
+*   **Files to change:** `frontend/context/AuthContext.tsx` (NEW), `frontend/app/page.tsx`, `frontend/components/AppShell.tsx`, `frontend/lib/rbac.ts` (NEW).
+*   **Change:**
+    *   Create an `AuthContext` to manage login/logout and hold the JWT session and user profile via `GET /auth/me`.
+    *   Update the login page to submit credentials to `POST /auth/login`.
+    *   Create a role mapping utility (`rbac.ts`) that maps the 5 backend roles to UI permission checks (e.g., `can.manageOrg(role)`).
+    *   Update `AppShell.tsx` to read the authenticated role and handle logout.
+*   **Why:** Real authentication is required to interact with any of the scoped (multi-tenant) endpoints.
+
+### 3. Settings & Master Data Hydration
+*   **Files to change:** `frontend/hooks/useDomainData.ts` (NEW), `frontend/components/views/Settings.tsx`.
+*   **Change:**
+    *   Create a custom hook that fetches reference data: `GET /departments`, `GET /employees`, `GET /categories`, `GET /settings/esg-configuration`.
+    *   Replace the corresponding static arrays in `Settings.tsx` and wire up the create/update functions to their respective `POST/PATCH` backend routes.
+*   **Why:** All other modules rely on these core entities for dropdowns and relationship mapping.
+
+### 4. Core Domain CRUD Integration
+*   **Files to change:** `frontend/services/*.ts` (NEW), `frontend/components/views/*.tsx` (Environmental, Social, Governance, Gamification).
+*   **Change:** Implement integration sequentially module-by-module.
+    *   **Environmental:** Hook up `GET /emission-factors`, `GET /environmental-goals`, `GET /carbon-transactions`.
+    *   **Social:** Split the generic `Submission` logic. Use `GET /csr-activities` and `GET /participations`.
+    *   **Governance:** Wire `GET /policies`, `GET /audits`, `GET /compliance-issues`. Update issue creation to submit `ownerEmployeeId` instead of an owner name string.
+    *   **Gamification:** Hook up `GET /challenges`, `GET /badges`, `GET /rewards`, and handle redemption via `POST /rewards/:id/redeem`.
+*   **Why:** Migrates the transactional features of the application to the real API.
+
+### 5. Dashboards & Read-Only Views
+*   **Files to change:** `frontend/components/views/AdminDashboard.tsx`, `frontend/components/views/EmployeeDashboard.tsx`.
+*   **Change:**
+    *   Replace hard-coded KPI numbers in Admin Dashboard with responses from `GET /dashboard/overview`, `GET /scores/organization`, and `GET /leaderboard/departments`.
+    *   Update Employee Dashboard to fetch specific user progress via `GET /employees/:id/xp-history`, `GET /challenge-participations?employee_id=me`, etc.
+*   **Why:** Ensures the dashboards accurately reflect live, calculated backend metrics rather than static UI placeholders.
+
+### 6. Notifications & Cleanup
+*   **Files to change:** `frontend/components/AppShell.tsx`, `frontend/context/EsgContext.tsx` (DELETE).
+*   **Change:**
+    *   Implement polling (every 30s) against `GET /notifications?is_read=false` to populate the bell icon in the AppShell.
+    *   Systematically remove remaining mock slices from `EsgContext.tsx` until it can be entirely deleted.
+*   **Why:** Finalizes the integration, ensures employees receive real-time nudges, and removes technical debt (the mock context).
