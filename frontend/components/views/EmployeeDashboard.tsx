@@ -2,10 +2,8 @@
 
 import React from "react";
 import { useEsg } from "@/context/EsgContext";
-import { useRouter } from "next/navigation";
 
 export default function EmployeeDashboardView() {
-  const router = useRouter();
   const {
     currentUser,
     submissions,
@@ -16,6 +14,12 @@ export default function EmployeeDashboardView() {
   } = useEsg();
 
   const pendingPolicyCount = policies.length - acknowledgements.filter((a) => a.employeeId === currentUser.id).length;
+
+  const navigateTo = (path: string) => {
+    if (typeof window !== "undefined") {
+      window.location.assign(path);
+    }
+  };
   const activeChallengesSubmissions = submissions.filter(
     (s) => s.employeeId === currentUser.id && s.type === "challenge" && s.status !== "Approved"
   );
@@ -25,18 +29,47 @@ export default function EmployeeDashboardView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200/80 bg-white/80 p-6 shadow-[0_20px_60px_-28px_rgba(15,23,42,0.28)] sm:flex-row sm:items-end sm:justify-between">
-        <div>
+      <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200/80 bg-white/80 p-5 shadow-[0_20px_60px_-28px_rgba(15,23,42,0.28)] sm:p-6 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-safe">
           <div className="mb-2 inline-flex items-center rounded-full border border-primary/15 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
             Your impact
           </div>
           <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Keep your sustainability momentum visible.</h2>
           <p className="mt-1 text-sm text-slate-500">Monitor your active work, recent recognition, and the next actions that matter most.</p>
         </div>
-        <button onClick={() => router.push("/dashboard?role=employee&view=employee-challenges")} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-container">
+        <button onClick={() => navigateTo("/dashboard?role=employee&view=employee-challenges")} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-container">
           <span className="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
           Log activity
         </button>
+      </div>
+
+      <div className="rounded-[24px] border border-slate-200/80 bg-white/80 p-5 shadow-[0_20px_60px_-28px_rgba(15,23,42,0.28)] sm:p-6">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-xl font-semibold text-slate-900">Your employee flow</h3>
+            <p className="text-sm text-slate-500">Follow the core loop from acknowledgement to rewards with a single path through the workspace.</p>
+          </div>
+          <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+            Acknowledge → Participate → Earn → Redeem
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {[
+            { title: "Review policies", description: "Acknowledge new guidance", action: () => navigateTo("/dashboard?role=employee&view=employee-policies"), icon: "gavel" },
+            { title: "Join CSR", description: "Participate in social activities", action: () => navigateTo("/dashboard?role=employee&view=employee-csr-activities"), icon: "volunteer_activism" },
+            { title: "Track challenges", description: "Submit progress and evidence", action: () => navigateTo("/dashboard?role=employee&view=employee-challenges"), icon: "emoji_events" },
+            { title: "Redeem rewards", description: "Spend points on available rewards", action: () => navigateTo("/dashboard?role=employee&view=employee-rewards"), icon: "redeem" },
+          ].map((step) => (
+            <button key={step.title} onClick={step.action} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-left transition hover:border-primary hover:bg-white">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{step.icon}</span>
+              </div>
+              <h4 className="text-sm font-semibold text-slate-900">{step.title}</h4>
+              <p className="mt-1 text-sm text-slate-500">{step.description}</p>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
@@ -96,12 +129,12 @@ export default function EmployeeDashboardView() {
           </div>
 
           <div className="panel-card p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-safe">
                 <h3 className="text-xl font-semibold text-slate-900">My active challenges</h3>
                 <p className="text-sm text-slate-500">Stay on top of what’s in motion.</p>
               </div>
-              <button onClick={() => router.push("/dashboard?role=employee&view=employee-challenges")} className="text-sm font-semibold text-primary hover:underline">
+              <button onClick={() => navigateTo("/dashboard?role=employee&view=employee-challenges")} className="text-sm font-semibold text-primary hover:underline">
                 Browse all
               </button>
             </div>
@@ -111,7 +144,7 @@ export default function EmployeeDashboardView() {
                 <span className="material-symbols-outlined text-4xl text-slate-400" aria-hidden="true">rocket_launch</span>
                 <p className="mt-2 text-sm font-semibold text-slate-700">No active challenges just yet</p>
                 <p className="mt-1 text-sm text-slate-500">Join a challenge to start earning XP and rewards.</p>
-                <button onClick={() => router.push("/dashboard?role=employee&view=employee-challenges")} className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-container">
+                <button onClick={() => navigateTo("/dashboard?role=employee&view=employee-challenges")} className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-container">
                   Join a challenge
                 </button>
               </div>
@@ -134,10 +167,10 @@ export default function EmployeeDashboardView() {
                       <div className="h-full rounded-full bg-primary" style={{ width: `${sub.progressPercent || 0}%` }} />
                     </div>
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => router.push(`/dashboard?role=employee&view=employee-challenges`)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                      <button onClick={() => navigateTo(`/dashboard?role=employee&view=employee-challenges`)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
                         Details
                       </button>
-                      <button onClick={() => router.push(`/dashboard?role=employee&view=employee-challenges&submit=${sub.targetId}`)} className="rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white transition hover:bg-primary-container">
+                      <button onClick={() => navigateTo(`/dashboard?role=employee&view=employee-challenges&submit=${sub.targetId}`)} className="rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white transition hover:bg-primary-container">
                         Update progress
                       </button>
                     </div>
@@ -179,7 +212,7 @@ export default function EmployeeDashboardView() {
                   <p className="mt-1 text-sm text-slate-600">You have {pendingPolicyCount} policy update{pendingPolicyCount > 1 ? "s" : ""} waiting for review.</p>
                 </div>
               </div>
-              <button onClick={() => router.push("/dashboard?role=employee&view=employee-policies")} className="mt-4 w-full rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">
+              <button onClick={() => navigateTo("/dashboard?role=employee&view=employee-policies")} className="mt-4 w-full rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-700">
                 Review policy now
               </button>
             </div>

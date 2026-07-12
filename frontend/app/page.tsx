@@ -1,40 +1,46 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import { EsgProvider } from "@/context/EsgContext";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  const navigateTo = (path: string) => {
+    if (typeof window !== "undefined") {
+      window.location.assign(path);
+    }
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.toLowerCase().includes("admin")) {
-      router.push("/dashboard?role=admin&view=org-dashboard");
+      navigateTo("/dashboard?role=admin&view=org-dashboard");
     } else {
-      router.push("/dashboard?role=employee&view=employee-dashboard");
+      navigateTo("/dashboard?role=employee&view=employee-dashboard");
     }
   };
 
   const handleQuickLogin = (role: "admin" | "employee") => {
-    router.push(role === "admin" ? "/dashboard?role=admin&view=org-dashboard" : "/dashboard?role=employee&view=employee-dashboard");
+    navigateTo(role === "admin" ? "/dashboard?role=admin&view=org-dashboard" : "/dashboard?role=employee&view=employee-dashboard");
   };
 
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top_left,rgba(0,99,104,0.12),transparent_25%),linear-gradient(135deg,#f4f7fb_0%,#fcfefe_100%)] px-4 py-8 text-slate-800 sm:px-6 lg:px-8">
-      <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl items-center justify-center">
+    <EsgProvider>
+    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top_left,rgba(0,99,104,0.12),transparent_25%),linear-gradient(135deg,#f4f7fb_0%,#fcfefe_100%)] px-3 py-4 text-slate-800 sm:px-5 sm:py-6 lg:px-8 lg:py-8">
+      <main className="mx-auto flex min-h-[calc(100vh-2rem)] max-w-7xl items-center justify-center px-1 py-2 sm:px-2 sm:py-3 lg:px-4">
         <div className="grid w-full overflow-hidden rounded-[32px] border border-slate-200/80 bg-white/80 shadow-[0_35px_90px_-30px_rgba(2,48,44,0.35)] backdrop-blur-xl lg:grid-cols-[1.05fr_0.95fr]">
-          <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0d3d1b_0%,#0b5c41_55%,#0b3f2d_100%)] p-8 text-white sm:p-10 lg:p-12">
+          <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0d3d1b_0%,#0b5c41_55%,#0b3f2d_100%)] p-6 text-white sm:p-8 lg:p-10">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_28%)]" />
             <div className="relative z-10 flex h-full flex-col justify-between gap-8">
-              <div>
+              <div className="max-w-xl">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-semibold tracking-[0.24em] text-emerald-50/90 uppercase">
                   <span className="material-symbols-outlined text-[16px]" aria-hidden="true">eco</span>
                   Climate ready operations
                 </div>
-                <h1 className="max-w-xl text-3xl font-semibold leading-tight sm:text-4xl">
+                <h1 className="text-3xl font-semibold leading-tight sm:text-4xl">
                   Bring sustainability reporting into one clear operating view.
                 </h1>
                 <p className="mt-4 max-w-lg text-base leading-7 text-emerald-50/90">
@@ -128,9 +134,9 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-white/80 p-4">
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white/80 p-4 sm:p-5">
               <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Quick demo access</p>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 <button onClick={() => handleQuickLogin("employee")} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
                   <span className="material-symbols-outlined text-[16px]" aria-hidden="true">badge</span>
                   <span>Continue as Employee</span>
@@ -150,5 +156,6 @@ export default function LoginPage() {
         </div>
       </main>
     </div>
+    </EsgProvider>
   );
 }

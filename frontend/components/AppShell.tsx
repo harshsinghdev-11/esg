@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useEsg } from "@/context/EsgContext";
 
 interface AppShellProps {
@@ -40,8 +39,6 @@ const employeeLinks: SidebarLink[] = [
 ];
 
 export default function AppShell({ children }: AppShellProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const {
     currentUser,
     switchRole,
@@ -50,8 +47,12 @@ export default function AppShell({ children }: AppShellProps) {
     clearAllNotifications,
   } = useEsg();
 
-  const currentRole = searchParams.get("role") || currentUser.role;
-  const currentView = searchParams.get("view") || (currentRole === "admin" ? "org-dashboard" : "employee-dashboard");
+  const currentRole = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("role") || currentUser.role
+    : currentUser.role;
+  const currentView = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("view") || (currentRole === "admin" ? "org-dashboard" : "employee-dashboard")
+    : currentRole === "admin" ? "org-dashboard" : "employee-dashboard";
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -61,13 +62,17 @@ export default function AppShell({ children }: AppShellProps) {
   }, []);
 
   const navigateTo = (viewName: string) => {
-    router.push(`/dashboard?role=${currentRole}&view=${viewName}`);
+    if (typeof window !== "undefined") {
+      window.location.assign(`/dashboard?role=${currentRole}&view=${viewName}`);
+    }
   };
 
   const handleRoleChange = (role: "admin" | "employee") => {
     switchRole(role);
     const defaultView = role === "admin" ? "org-dashboard" : "employee-dashboard";
-    router.push(`/dashboard?role=${role}&view=${defaultView}`);
+    if (typeof window !== "undefined") {
+      window.location.assign(`/dashboard?role=${role}&view=${defaultView}`);
+    }
     setShowProfileMenu(false);
   };
 
@@ -78,7 +83,7 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div className="min-h-screen bg-transparent">
-      <nav className="fixed left-0 top-0 hidden h-full w-[270px] flex-col border-r border-emerald-950/20 bg-[linear-gradient(180deg,#0d3d1b_0%,#0b2f16_100%)] p-5 text-slate-100 shadow-[18px_0_60px_-24px_rgba(2,48,44,0.45)] md:flex">
+      <nav className="fixed left-0 top-0 hidden h-full w-[270px] flex-col border-r border-emerald-950/20 bg-[linear-gradient(180deg,#0d3d1b_0%,#0b2f16_100%)] p-4 text-slate-100 shadow-[18px_0_60px_-24px_rgba(2,48,44,0.45)] md:flex lg:p-5">
         <div className="mb-8 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-xl">
             <span className="material-symbols-outlined" aria-hidden="true">eco</span>
@@ -119,7 +124,7 @@ export default function AppShell({ children }: AppShellProps) {
           })}
         </div>
 
-        <div className="mt-auto rounded-2xl border border-white/10 bg-white/10 p-4">
+        <div className="mt-auto rounded-2xl border border-white/10 bg-white/10 p-3.5">
           <div className="mb-3 flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-400/20 text-sm font-semibold text-emerald-100">
               {currentUser.name[0]}
@@ -155,12 +160,12 @@ export default function AppShell({ children }: AppShellProps) {
       </nav>
 
       <div className="flex min-h-screen flex-col md:ml-[270px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-6 backdrop-blur-xl md:px-8">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur-xl sm:px-6 md:px-8">
+          <div className="flex min-safe items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
               <span className="material-symbols-outlined text-[20px]" aria-hidden="true">route</span>
             </div>
-            <div>
+            <div className="min-safe">
               <p className="text-sm font-semibold text-slate-900">{currentRole === "admin" ? "Executive workspace" : "Employee workspace"}</p>
               <p className="text-xs text-slate-500">{currentLabel || "overview"}</p>
             </div>
@@ -243,7 +248,9 @@ export default function AppShell({ children }: AppShellProps) {
                   <button
                     onClick={() => {
                       setShowProfileMenu(false);
-                      router.push("/");
+                      if (typeof window !== "undefined") {
+                        window.location.assign("/");
+                      }
                     }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 transition-colors hover:bg-rose-50"
                   >
@@ -256,7 +263,7 @@ export default function AppShell({ children }: AppShellProps) {
           </div>
         </header>
 
-        <main className="mx-auto flex-1 w-full max-w-7xl p-6 md:p-8 lg:p-10">
+        <main className="mx-auto flex-1 w-full max-w-7xl p-4 sm:p-6 md:p-8 lg:p-10">
           {children}
         </main>
       </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { EsgProvider } from "@/context/EsgContext";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "EcoSphere - ESG Management Portal",
@@ -15,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased light">
       <body className="min-h-full flex flex-col bg-surface text-on-surface font-body overflow-x-hidden antialiased">
-        <EsgProvider>{children}</EsgProvider>
+        {children}
       </body>
     </html>
   );

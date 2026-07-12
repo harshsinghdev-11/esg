@@ -8,6 +8,12 @@ export default function OrgDashboardView() {
   const [trendPillar, setTrendPillar] = useState("Overall");
 
   const openComplianceCount = complianceIssues.filter((c) => c.status === "Open").length;
+
+  const navigateTo = (path: string) => {
+    if (typeof window !== "undefined") {
+      window.location.assign(path);
+    }
+  };
   const overallScore = 78;
   const envScore = 82;
   const socialScore = 75;
@@ -21,8 +27,8 @@ export default function OrgDashboardView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200/80 bg-white/80 p-6 shadow-[0_20px_60px_-28px_rgba(15,23,42,0.28)] sm:flex-row sm:items-end sm:justify-between">
-        <div>
+      <div className="flex flex-col gap-4 rounded-[28px] border border-slate-200/80 bg-white/80 p-5 shadow-[0_20px_60px_-28px_rgba(15,23,42,0.28)] sm:p-6 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-safe">
           <div className="mb-2 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">
             Executive overview
           </div>
@@ -34,14 +40,44 @@ export default function OrgDashboardView() {
         </button>
       </div>
 
+      <div className="rounded-[24px] border border-slate-200/80 bg-white/80 p-5 shadow-[0_20px_60px_-28px_rgba(15,23,42,0.28)] sm:p-6">
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-slate-900">Suggested admin flow</h2>
+            <p className="text-sm text-slate-500">Use this path to move from setup to reporting in the same order as the demo flow.</p>
+          </div>
+          <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
+            Setup → Monitor → Approve → Report
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {[
+            { title: "Configure teams", description: "Departments and employees", action: () => navigateTo("/dashboard?role=admin&view=settings-departments"), icon: "group" },
+            { title: "Set metrics", description: "Emission factors and goals", action: () => navigateTo("/dashboard?role=admin&view=environmental-dashboard"), icon: "eco" },
+            { title: "Publish policy", description: "Governance and acknowledgements", action: () => navigateTo("/dashboard?role=admin&view=policies"), icon: "gavel" },
+            { title: "Approve work", description: "CSR and challenge submissions", action: () => navigateTo("/dashboard?role=admin&view=approvals-queue"), icon: "fact_check" },
+            { title: "Share reports", description: "Export and review ESG output", action: () => navigateTo("/dashboard?role=admin&view=reports"), icon: "description" },
+          ].map((step) => (
+            <button key={step.title} onClick={step.action} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-left transition hover:border-primary hover:bg-white">
+              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{step.icon}</span>
+              </div>
+              <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
+              <p className="mt-1 text-sm text-slate-500">{step.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="panel-card p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-safe">
               <p className="text-sm font-semibold text-slate-500">Overall ESG score</p>
               <h2 className="text-xl font-semibold text-slate-900">Balanced performance</h2>
             </div>
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">+2.4% QoQ</span>
+            <span className="inline-flex w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">+2.4% QoQ</span>
           </div>
           <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
             <div className="mx-auto flex w-full max-w-[220px] items-center justify-center">
@@ -94,12 +130,12 @@ export default function OrgDashboardView() {
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="panel-card p-6">
-          <div className="mb-6 flex items-center justify-between gap-3">
-            <div>
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-safe">
               <h2 className="text-xl font-semibold text-slate-900">6-month ESG trend</h2>
               <p className="text-sm text-slate-500">Performance movement for {trendPillar.toLowerCase()}.</p>
             </div>
-            <select value={trendPillar} onChange={(e) => setTrendPillar(e.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none focus:border-primary">
+            <select value={trendPillar} onChange={(e) => setTrendPillar(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 outline-none focus:border-primary sm:w-auto">
               <option>Overall</option>
               <option>Environmental</option>
               <option>Social</option>
@@ -117,12 +153,12 @@ export default function OrgDashboardView() {
         </div>
 
         <div className="panel-card p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-safe">
               <h2 className="text-xl font-semibold text-slate-900">Compliance alerts</h2>
               <p className="text-sm text-slate-500">Immediate follow-up items</p>
             </div>
-            <span className="rounded-full bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-600">{openComplianceCount + 1} active</span>
+            <span className="inline-flex w-fit rounded-full bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-600">{openComplianceCount + 1} active</span>
           </div>
           <div className="space-y-3">
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3">
@@ -150,7 +186,7 @@ export default function OrgDashboardView() {
       </div>
 
       <div className="panel-card overflow-hidden">
-        <div className="border-b border-slate-200 bg-slate-50/70 px-6 py-5">
+        <div className="border-b border-slate-200 bg-slate-50/70 px-4 py-5 sm:px-6">
           <h2 className="text-xl font-semibold text-slate-900">Department ESG rankings</h2>
         </div>
         <div className="overflow-x-auto">

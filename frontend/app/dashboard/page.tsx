@@ -1,9 +1,7 @@
 "use client";
 
 import React, { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
-import { EsgProvider } from "@/context/EsgContext";
 
 // Import view components
 import OrgDashboardView from "@/components/views/AdminDashboard";
@@ -14,11 +12,15 @@ import GovernanceViews from "@/components/views/Governance";
 import GamificationViews from "@/components/views/Gamification";
 import ReportsViews from "@/components/views/Reports";
 import SettingsViews from "@/components/views/Settings";
+import { EsgProvider } from "@/context/EsgContext";
 
 function DashboardContent() {
-  const searchParams = useSearchParams();
-  const role = searchParams.get("role") || "employee";
-  const view = searchParams.get("view") || (role === "admin" ? "org-dashboard" : "employee-dashboard");
+  const role = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("role") || "employee"
+    : "employee";
+  const view = typeof window !== "undefined"
+    ? new URLSearchParams(window.location.search).get("view") || (role === "admin" ? "org-dashboard" : "employee-dashboard")
+    : role === "admin" ? "org-dashboard" : "employee-dashboard";
 
   // Route rendering based on active view name
   const renderView = () => {

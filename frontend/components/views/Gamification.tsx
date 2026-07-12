@@ -2,14 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useEsg } from "@/context/EsgContext";
-import { useSearchParams } from "next/navigation";
 
 interface GamificationViewsProps {
   activeTab: "challenges" | "approvals" | "badges" | "rewards-admin" | "rewards-employee" | "employee-challenges" | "employee-badges" | "employee-rewards" | "leaderboard";
 }
 
 export default function GamificationViews({ activeTab }: GamificationViewsProps) {
-  const searchParams = useSearchParams();
   const {
     currentUser,
     challenges,
@@ -57,11 +55,13 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
 
   // Check if a challenge ID was passed via URL parameters to pre-open submission panel (convenient for employee log activity links)
   useEffect(() => {
-    const preOpenSubId = searchParams.get("submit");
-    if (preOpenSubId) {
-      setSubmitProgressId(preOpenSubId);
+    if (typeof window !== "undefined") {
+      const preOpenSubId = new URLSearchParams(window.location.search).get("submit");
+      if (preOpenSubId) {
+        setSubmitProgressId(preOpenSubId);
+      }
     }
-  }, [searchParams]);
+  }, []);
 
   // Form submit handlers
   const handleCreateChallenge = (e: React.FormEvent) => {
