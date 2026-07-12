@@ -8,6 +8,8 @@ export const metadata: Metadata = {
   description: "Measure, Manage, and Improve your ESG impact interactively.",
 };
 
+import { Providers } from "./providers";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -16,7 +18,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased light">
       <body className="min-h-full flex flex-col bg-surface text-on-surface font-body overflow-x-hidden antialiased">
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

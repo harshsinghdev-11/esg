@@ -2,6 +2,10 @@
 
 import React, { Suspense } from "react";
 import AppShell from "@/components/AppShell";
+import AppIcon from "@/components/AppIcon";
+
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/rbac";
 
 // Import view components
 import OrgDashboardView from "@/components/views/AdminDashboard";
@@ -15,17 +19,19 @@ import SettingsViews from "@/components/views/Settings";
 import { EsgProvider } from "@/context/EsgContext";
 
 function DashboardContent() {
-  const role = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("role") || "employee"
-    : "employee";
-  const view = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("view") || (role === "admin" ? "org-dashboard" : "employee-dashboard")
-    : role === "admin" ? "org-dashboard" : "employee-dashboard";
+  const searchParams = useSearchParams();
+  const { currentUser, loading } = useAuth();
+  
+  if (loading) return null; // Let the Suspense or AuthContext handle loading
+  
+  const role = currentUser?.role || "EMPLOYEE";
+  const isEmployee = !can.manageOrg(role) && !can.manageEmployees(role);
+  const view = searchParams.get("view") || (isEmployee ? "employee-dashboard" : "org-dashboard");
 
   // Route rendering based on active view name
   const renderView = () => {
     // Employee Views
-    if (role === "employee") {
+    if (isEmployee) {
       switch (view) {
         case "employee-dashboard":
           return <EmployeeDashboardView />;
@@ -119,19 +125,15 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <EsgProvider>
-      <Suspense fallback={
-        <div className="min-h-screen w-full flex items-center justify-center bg-surface">
-          <div className="flex flex-col items-center gap-4">
-            <span className="material-symbols-outlined text-primary text-[48px] animate-spin" aria-hidden="true">
-              progress_activity
-            </span>
-            <p className="text-body-md text-outline font-semibold">Loading EcoSphere...</p>
-          </div>
+    <Suspense fallback={
+      <div className="min-h-screen w-full flex items-center justify-center bg-surface">
+        <div className="flex flex-col items-center gap-4">
+          <AppIcon name="progress_activity" className="text-primary animate-spin" size={48} />
+          <p className="text-body-md text-outline font-semibold">Loading EcoSphere...</p>
         </div>
-      }>
-        <DashboardContent />
-      </Suspense>
-    </EsgProvider>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   );
 }

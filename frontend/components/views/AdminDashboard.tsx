@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useEsg } from "@/context/EsgContext";
+import AppIcon from "@/components/AppIcon";
 
 export default function OrgDashboardView() {
   const { complianceIssues } = useEsg();
@@ -46,22 +47,29 @@ export default function OrgDashboardView() {
             <h2 className="text-xl font-semibold text-slate-900">Suggested admin flow</h2>
             <p className="text-sm text-slate-500">Use this path to move from setup to reporting in the same order as the demo flow.</p>
           </div>
-          <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">
-            Setup → Monitor → Approve → Report
+          <div className="mt-4 flex items-center gap-1.5 text-leaf-green">
+            <AppIcon name="trending_up" className="text-sm font-bold" />
+            <span className="font-semibold text-label-md">+2.4% vs last quarter</span>
           </div>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-          {[
-            { title: "Configure teams", description: "Departments and employees", action: () => navigateTo("/dashboard?role=admin&view=settings-departments"), icon: "group" },
-            { title: "Set metrics", description: "Emission factors and goals", action: () => navigateTo("/dashboard?role=admin&view=environmental-dashboard"), icon: "eco" },
-            { title: "Publish policy", description: "Governance and acknowledgements", action: () => navigateTo("/dashboard?role=admin&view=policies"), icon: "gavel" },
-            { title: "Approve work", description: "CSR and challenge submissions", action: () => navigateTo("/dashboard?role=admin&view=approvals-queue"), icon: "fact_check" },
-            { title: "Share reports", description: "Export and review ESG output", action: () => navigateTo("/dashboard?role=admin&view=reports"), icon: "description" },
-          ].map((step) => (
-            <button key={step.title} onClick={step.action} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-left transition hover:border-primary hover:bg-white">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{step.icon}</span>
+        {/* Individual Pillar Scores */}
+        <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Environmental */}
+          <div className="bg-surface-container-lowest rounded-xl border border-border-subtle p-6 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow flex flex-col justify-between">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-10 h-10 rounded-full bg-[#E8F5E9] flex items-center justify-center text-[#2E7D32]">
+                <AppIcon name="eco" />
+              </div>
+              <span className="bg-[#E8F5E9] text-[#2E7D32] px-2 py-0.5 rounded-full font-semibold text-[10px] uppercase">
+                Environmental
+              </span>
+            </div>
+            <div>
+              <div className="font-bold text-headline-lg text-on-surface mb-1">{envScore}</div>
+              <div className="flex items-center gap-1 text-[#2E7D32] font-semibold text-label-md">
+                <AppIcon name="arrow_upward" className="text-sm" />
+                <span>+4.1 vs Q1</span>
               </div>
               <h3 className="text-sm font-semibold text-slate-900">{step.title}</h3>
               <p className="mt-1 text-sm text-slate-500">{step.description}</p>
@@ -79,46 +87,39 @@ export default function OrgDashboardView() {
             </div>
             <span className="inline-flex w-fit rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">+2.4% QoQ</span>
           </div>
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center">
-            <div className="mx-auto flex w-full max-w-[220px] items-center justify-center">
-              <div className="relative h-44 w-44">
-                <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
-                  <path className="text-slate-200" strokeWidth="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                  <path className="text-primary" strokeDasharray={`${overallScore}, 100`} strokeWidth="3" strokeLinecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-4xl font-semibold text-slate-900">{overallScore}</span>
-                  <span className="mt-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-400">/ 100</span>
-                </div>
+
+          {/* Social */}
+          <div className="bg-surface-container-lowest rounded-xl border border-border-subtle p-6 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow flex flex-col justify-between">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-10 h-10 rounded-full bg-[#E3F2FD] flex items-center justify-center text-[#1565C0]">
+                <AppIcon name="group" />
               </div>
             </div>
-            <div className="flex-1 space-y-3">
-              {[
-                { label: "Environmental", value: envScore, tone: "text-emerald-600", bg: "bg-emerald-50" },
-                { label: "Social", value: socialScore, tone: "text-sky-600", bg: "bg-sky-50" },
-                { label: "Governance", value: govScore, tone: "text-amber-600", bg: "bg-amber-50" },
-              ].map((item) => (
-                <div key={item.label} className={`flex items-center justify-between rounded-2xl border border-slate-200 ${item.bg} px-4 py-3`}>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-700">{item.label}</p>
-                    <p className="text-xs text-slate-500">Quarterly trend</p>
-                  </div>
-                  <div className={`text-lg font-semibold ${item.tone}`}>{item.value}</div>
-                </div>
-              ))}
+            <div>
+              <div className="font-bold text-headline-lg text-on-surface mb-1">{socialScore}</div>
+              <div className="flex items-center gap-1 text-[#1565C0] font-semibold text-label-md">
+                <AppIcon name="arrow_upward" className="text-sm" />
+                <span>+1.2 vs Q1</span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
-          {[
-            { title: "Open actions", value: `${openComplianceCount + 1}`, caption: "Policy and audit follow-ups", icon: "task_alt", tint: "bg-rose-50 text-rose-600" },
-            { title: "Active challenges", value: "12", caption: "Employee participation", icon: "emoji_events", tint: "bg-violet-50 text-violet-600" },
-            { title: "Reward redemptions", value: "28", caption: "This month", icon: "redeem", tint: "bg-amber-50 text-amber-600" },
-          ].map((item) => (
-            <div key={item.title} className="panel-card p-5">
-              <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-2xl ${item.tint}`}>
-                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{item.icon}</span>
+          {/* Governance */}
+          <div className="bg-surface-container-lowest rounded-xl border border-border-subtle p-6 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow flex flex-col justify-between">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-10 h-10 rounded-full bg-[#FFF8E1] flex items-center justify-center text-[#F57F17]">
+                <AppIcon name="account_balance" />
+              </div>
+              <span className="bg-[#FFF8E1] text-[#F57F17] px-2 py-0.5 rounded-full font-semibold text-[10px] uppercase">
+                Governance
+              </span>
+            </div>
+            <div>
+              <div className="font-bold text-headline-lg text-on-surface mb-1">{govScore}</div>
+              <div className="flex items-center gap-1 text-error font-semibold text-label-md">
+                <AppIcon name="arrow_downward" className="text-sm" />
+                <span>-0.8 vs Q1</span>
               </div>
               <p className="text-sm font-semibold text-slate-500">{item.title}</p>
               <p className="mt-1 text-2xl font-semibold text-slate-900">{item.value}</p>
@@ -160,23 +161,34 @@ export default function OrgDashboardView() {
             </div>
             <span className="inline-flex w-fit rounded-full bg-rose-50 px-3 py-1 text-sm font-semibold text-rose-600">{openComplianceCount + 1} active</span>
           </div>
-          <div className="space-y-3">
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3">
-              <div className="flex items-start gap-2">
-                <span className="material-symbols-outlined text-rose-600" aria-hidden="true">warning</span>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">Waste audit overdue</p>
-                  <p className="text-sm text-slate-600">Manufacturing Facility Plant A</p>
+          <div className="space-y-4 flex-grow overflow-y-auto max-h-[220px] hide-scrollbar">
+            {/* Alert 1 */}
+            <div className="flex items-start gap-3 p-3 rounded-lg border border-error-container bg-error-container/10">
+              <AppIcon name="warning" className="text-error mt-0.5" />
+              <div>
+                <div className="font-semibold text-label-md text-on-surface mb-1">Waste Audit Overdue</div>
+                <div className="text-body-sm text-on-surface-variant">Manufacturing Facility Plant A</div>
+                <div className="mt-1.5">
+                  <span className="bg-error text-on-error px-2 py-0.5 rounded-full text-[9px] font-bold">OVERDUE</span>
                 </div>
               </div>
             </div>
-            {complianceIssues.filter((ci) => ci.status === "Open").map((ci) => (
-              <div key={ci.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                <div className="flex items-start gap-2">
-                  <span className="material-symbols-outlined text-slate-500" aria-hidden="true">assignment_late</span>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">{ci.title}</p>
-                    <p className="text-sm text-slate-600">Owner: {ci.owner}</p>
+
+            {/* Alert 2 */}
+            {complianceIssues.filter(ci => ci.status === "Open").map((ci, index) => (
+              <div key={ci.id} className="flex items-start gap-3 p-3 rounded-lg border border-error-container bg-error-container/5">
+                <AppIcon
+                  name={ci.severity === "Critical" ? "gavel" : "warning"}
+                  className="text-error mt-0.5"
+                />
+                <div>
+                  <div className="font-semibold text-label-md text-on-surface mb-1 truncate max-w-[180px]">{ci.title}</div>
+                  <div className="text-body-sm text-on-surface-variant">Owner: {ci.owner}</div>
+                  <div className="mt-1.5 flex gap-1.5">
+                    <span className="bg-error text-on-error px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">
+                      {ci.severity}
+                    </span>
+                    <span className="text-[10px] text-outline font-semibold">Due {ci.dueDate}</span>
                   </div>
                 </div>
               </div>

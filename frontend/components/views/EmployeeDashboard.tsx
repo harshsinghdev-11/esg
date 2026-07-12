@@ -2,6 +2,8 @@
 
 import React from "react";
 import { useEsg } from "@/context/EsgContext";
+import { useRouter } from "next/navigation";
+import AppIcon from "@/components/AppIcon";
 
 export default function EmployeeDashboardView() {
   const {
@@ -37,9 +39,11 @@ export default function EmployeeDashboardView() {
           <h2 className="text-2xl font-semibold text-slate-900 sm:text-3xl">Keep your sustainability momentum visible.</h2>
           <p className="mt-1 text-sm text-slate-500">Monitor your active work, recent recognition, and the next actions that matter most.</p>
         </div>
-        <button onClick={() => navigateTo("/dashboard?role=employee&view=employee-challenges")} className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-container">
-          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
-          Log activity
+        <button
+          onClick={() => router.push("/dashboard?role=employee&view=employee-challenges")}
+          className="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-semibold text-label-md hover:bg-primary-container transition-colors shadow-sm flex items-center gap-2 cursor-pointer active:scale-95"
+        >
+          <AppIcon name="add" className="text-sm font-bold" /> Log Activity
         </button>
       </div>
 
@@ -92,33 +96,35 @@ export default function EmployeeDashboardView() {
                   <p className="text-sm text-emerald-50/80">points balance</p>
                 </div>
               </div>
-            </div>
-
-            <div className="border-t border-slate-200 bg-slate-50/60 p-6">
-              <div className="mb-3 flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-slate-500">XP progress</p>
-                  <p className="text-sm text-slate-600">Next milestone is within reach.</p>
+              
+              <div className="shrink-0 text-center bg-surface-container-low p-4 rounded-lg border border-border-subtle min-w-[120px] w-full md:w-auto">
+                <AppIcon name="stars" className="text-tertiary text-3xl mb-1" />
+                <div className="font-bold text-headline-sm text-on-surface">
+                  {currentUser.points.toLocaleString()}
                 </div>
                 <span className="text-sm font-semibold text-primary">{currentUser.xp} / 1000 XP</span>
               </div>
-              <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full rounded-full bg-emerald-500" style={{ width: `${(currentUser.xp / 1000) * 100}%` }} />
-              </div>
-
-              <div className="mt-5">
-                <h4 className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Recent badges</h4>
-                {unlockedBadges.length === 0 ? (
-                  <p className="text-sm text-slate-500">No badges unlocked yet. Join challenges to start collecting recognition.</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {unlockedBadges.map((badgeId) => {
-                      const badgeObj = badges.find((b) => b.id === badgeId);
-                      if (!badgeObj) return null;
-                      return (
-                        <div key={badgeId} className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 shadow-sm">
-                          <span className="material-symbols-outlined text-amber-600" aria-hidden="true">{badgeObj.icon}</span>
-                          <span className="text-sm font-semibold text-slate-700">{badgeObj.name}</span>
+            </div>
+            
+            {/* Badges Row */}
+            <div className="px-6 pb-6 pt-3 border-t border-border-subtle bg-surface-container-low/30">
+              <h4 className="font-semibold text-label-md text-on-surface-variant mb-3 uppercase tracking-wider">Recent Badges</h4>
+              {unlockedBadges.length === 0 ? (
+                <div className="text-body-sm text-outline italic">No badges unlocked yet. Join challenges to earn badges!</div>
+              ) : (
+                <div className="flex gap-4 overflow-x-auto hide-scrollbar py-1">
+                  {unlockedBadges.map((badgeId) => {
+                    const badgeObj = badges.find((b) => b.id === badgeId);
+                    if (!badgeObj) return null;
+                    return (
+                      <div
+                        key={badgeId}
+                        className="flex items-center gap-2 bg-surface-white border border-border-subtle rounded-lg px-3 py-1.5 shrink-0 shadow-sm"
+                      >
+                        <AppIcon name={badgeObj.icon} className="text-[#F57F17]" />
+                        <div className="text-left">
+                          <p className="text-xs font-bold text-on-surface leading-tight">{badgeObj.name}</p>
+                          <p className="text-[9px] text-outline leading-tight">Unlocked</p>
                         </div>
                       );
                     })}
@@ -140,12 +146,15 @@ export default function EmployeeDashboardView() {
             </div>
 
             {activeChallengesSubmissions.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-6 text-center">
-                <span className="material-symbols-outlined text-4xl text-slate-400" aria-hidden="true">rocket_launch</span>
-                <p className="mt-2 text-sm font-semibold text-slate-700">No active challenges just yet</p>
-                <p className="mt-1 text-sm text-slate-500">Join a challenge to start earning XP and rewards.</p>
-                <button onClick={() => navigateTo("/dashboard?role=employee&view=employee-challenges")} className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-container">
-                  Join a challenge
+              <div className="text-center py-8 bg-surface-container-low/30 border border-dashed border-border-subtle rounded-xl">
+                <AppIcon name="rocket_launch" className="text-outline text-4xl mb-2" />
+                <p className="text-body-sm text-on-surface-variant font-semibold">No active challenges</p>
+                <p className="text-xs text-outline mt-1 mb-4">Join active challenges to start earning XP and rewards.</p>
+                <button
+                  onClick={() => router.push("/dashboard?role=employee&view=employee-challenges")}
+                  className="bg-primary text-on-primary px-4 py-2 rounded-lg text-xs font-semibold hover:bg-primary/95 transition-colors cursor-pointer"
+                >
+                  Join a Challenge
                 </button>
               </div>
             ) : (
@@ -182,22 +191,40 @@ export default function EmployeeDashboardView() {
         </div>
 
         <div className="space-y-6">
-          <div className="panel-card p-6">
-            <h3 className="text-xl font-semibold text-slate-900">Sustainability summary</h3>
-            <div className="mt-5 space-y-3">
-              {[
-                { label: "CSR program involvements", value: completedCsrCount, icon: "volunteer_activism", tint: "bg-emerald-50 text-emerald-600" },
-                { label: "Contribution index", value: "8.4%", icon: "trending_up", tint: "bg-sky-50 text-sky-600" },
-                { label: "Policies acknowledged", value: `${policies.length - pendingPolicyCount} / ${policies.length}`, icon: "gavel", tint: "bg-amber-50 text-amber-600" },
-              ].map((item) => (
-                <div key={item.label} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${item.tint}`}>
-                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{item.icon}</span>
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold text-slate-900">{item.value}</p>
-                    <p className="text-sm text-slate-500">{item.label}</p>
-                  </div>
+          {/* Quick Stats Panel */}
+          <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 shadow-sm space-y-5">
+            <h3 className="font-semibold text-headline-sm text-on-surface">Sustainability Summary</h3>
+            
+            {/* Stat item 1 */}
+            <div className="flex items-center gap-4 p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50">
+              <div className="w-10 h-10 rounded-full bg-[#E8F5E9] flex items-center justify-center text-[#2E7D32] shrink-0">
+                <AppIcon name="volunteer_activism" />
+              </div>
+              <div>
+                <div className="font-bold text-body-lg text-on-surface">{completedCsrCount}</div>
+                <div className="text-xs text-on-surface-variant font-semibold">CSR Program involvements</div>
+              </div>
+            </div>
+
+            {/* Stat item 2 */}
+            <div className="flex items-center gap-4 p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50">
+              <div className="w-10 h-10 rounded-full bg-[#E3F2FD] flex items-center justify-center text-[#1565C0] shrink-0">
+                <AppIcon name="trending_up" />
+              </div>
+              <div>
+                <div className="font-bold text-body-lg text-on-surface">8.4%</div>
+                <div className="text-xs text-on-surface-variant font-semibold">My ESG Contribution (Operations)</div>
+              </div>
+            </div>
+
+            {/* Stat item 3 */}
+            <div className="flex items-center gap-4 p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50">
+              <div className="w-10 h-10 rounded-full bg-[#FFF8E1] flex items-center justify-center text-[#F57F17] shrink-0">
+                <AppIcon name="gavel" />
+              </div>
+              <div>
+                <div className="font-bold text-body-lg text-on-surface">
+                  {policies.length - pendingPolicyCount} / {policies.length}
                 </div>
               ))}
             </div>
@@ -206,7 +233,7 @@ export default function EmployeeDashboardView() {
           {pendingPolicyCount > 0 && (
             <div className="rounded-[24px] border border-rose-200 bg-rose-50 p-5">
               <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-rose-600" aria-hidden="true">warning</span>
+                <AppIcon name="warning" className="text-error shrink-0 mt-0.5" />
                 <div>
                   <h4 className="font-semibold text-slate-900">Policy acknowledgement needed</h4>
                   <p className="mt-1 text-sm text-slate-600">You have {pendingPolicyCount} policy update{pendingPolicyCount > 1 ? "s" : ""} waiting for review.</p>

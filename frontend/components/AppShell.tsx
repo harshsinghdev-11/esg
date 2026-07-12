@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { useEsg } from "@/context/EsgContext";
+import { useAuth } from "@/context/AuthContext";
+import { can } from "@/lib/rbac";
+import AppIcon from "@/components/AppIcon";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -39,20 +42,14 @@ const employeeLinks: SidebarLink[] = [
 ];
 
 export default function AppShell({ children }: AppShellProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { currentUser, logout, loading } = useAuth();
   const {
-    currentUser,
-    switchRole,
     notifications,
     clearNotification,
     clearAllNotifications,
   } = useEsg();
-
-  const currentRole = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("role") || currentUser.role
-    : currentUser.role;
-  const currentView = typeof window !== "undefined"
-    ? new URLSearchParams(window.location.search).get("view") || (currentRole === "admin" ? "org-dashboard" : "employee-dashboard")
-    : currentRole === "admin" ? "org-dashboard" : "employee-dashboard";
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -61,32 +58,45 @@ export default function AppShell({ children }: AppShellProps) {
     setMounted(true);
   }, []);
 
+  if (loading || !currentUser) {
+    return null;
+  }
+
+  const role = currentUser.role;
+  const isEmployee = !can.manageOrg(role) && !can.manageEmployees(role);
+  const currentRole = isEmployee ? "employee" : "admin";
+  const currentRoleName = isEmployee ? "employee" : "admin";
+  const currentView = searchParams.get("view") || (isEmployee ? "employee-dashboard" : "org-dashboard");
+
   const navigateTo = (viewName: string) => {
-    if (typeof window !== "undefined") {
-      window.location.assign(`/dashboard?role=${currentRole}&view=${viewName}`);
-    }
+    router.push(`/dashboard?view=${viewName}`);
   };
 
-  const handleRoleChange = (role: "admin" | "employee") => {
-    switchRole(role);
-    const defaultView = role === "admin" ? "org-dashboard" : "employee-dashboard";
-    if (typeof window !== "undefined") {
-      window.location.assign(`/dashboard?role=${role}&view=${defaultView}`);
-    }
+  const handleRoleChange = (selectedRole: "admin" | "employee") => {
+    // Note: Temporary frontend switch for demo purposes, 
+    // real app would re-login or change account
+    const defaultView = selectedRole === "admin" ? "org-dashboard" : "employee-dashboard";
+    router.push(`/dashboard?view=${defaultView}`);
     setShowProfileMenu(false);
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const activeLinks = currentRole === "admin" ? adminLinks : employeeLinks;
-  const pendingApprovalsCount = currentRole === "admin" ? notifications.length : 0;
-  const currentLabel = currentView.replace("employee-", "").replace("-dashboard", "").replace(/-/g, " ");
+
+  const activeLinks = isEmployee ? employeeLinks : adminLinks;
+
+  // Calculate pending submissions count for approvals queue badge
+  const pendingApprovalsCount = !isEmployee
+    ? notifications.length // Using notifications length as active notifications queue
+    : 0;
 
   return (
-    <div className="min-h-screen bg-transparent">
-      <nav className="fixed left-0 top-0 hidden h-full w-[270px] flex-col border-r border-emerald-950/20 bg-[linear-gradient(180deg,#0d3d1b_0%,#0b2f16_100%)] p-4 text-slate-100 shadow-[18px_0_60px_-24px_rgba(2,48,44,0.45)] md:flex lg:p-5">
-        <div className="mb-8 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-xl">
-            <span className="material-symbols-outlined" aria-hidden="true">eco</span>
+    <div className="min-h-screen flex flex-col md:flex-row bg-surface">
+      {/* SideNavBar */}
+      <nav className="hidden md:flex flex-col h-full py-6 fixed left-0 top-0 w-[260px] bg-deep-forest z-40 text-surface-white">
+        {/* Branding */}
+        <div className="px-6 mb-8 flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-full bg-surface-white/20 flex items-center justify-center shrink-0">
+            <AppIcon name="eco" className="text-surface-white" />
           </div>
           <div>
             <h1 className="text-lg font-semibold">EcoSphere</h1>
@@ -110,8 +120,8 @@ export default function AppShell({ children }: AppShellProps) {
                     : "text-slate-200/90 hover:bg-white/10 hover:text-white"
                 }`}
               >
-                <div className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[18px]" aria-hidden="true">{link.icon}</span>
+                <div className="flex items-center space-x-3">
+                  <AppIcon name={link.icon} className="text-current" />
                   <span>{link.name}</span>
                 </div>
                 {mounted && link.badge && pendingApprovalsCount > 0 && (
@@ -124,14 +134,15 @@ export default function AppShell({ children }: AppShellProps) {
           })}
         </div>
 
-        <div className="mt-auto rounded-2xl border border-white/10 bg-white/10 p-3.5">
-          <div className="mb-3 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-400/20 text-sm font-semibold text-emerald-100">
-              {currentUser.name[0]}
+        {/* Role Switcher Widget at bottom of sidebar */}
+        <div className="mx-4 mt-auto p-4 bg-surface-white/10 border border-surface-white/10 rounded-xl">
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="w-8 h-8 rounded-full bg-primary-fixed-dim/30 flex items-center justify-center text-sm font-bold text-leaf-green uppercase">
+              {currentUser.fullName ? currentUser.fullName[0] : "?"}
             </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">{currentUser.name}</p>
-              <p className="truncate text-xs text-emerald-100/80 capitalize">{currentRole} view</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-body-sm font-semibold text-surface-white truncate">{currentUser.fullName}</p>
+              <p className="text-xs text-surface-variant truncate capitalize">{currentRoleName} View</p>
             </div>
           </div>
           <div className="flex gap-2">
@@ -159,15 +170,15 @@ export default function AppShell({ children }: AppShellProps) {
         </div>
       </nav>
 
-      <div className="flex min-h-screen flex-col md:ml-[270px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/80 px-4 backdrop-blur-xl sm:px-6 md:px-8">
-          <div className="flex min-safe items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700">
-              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">route</span>
-            </div>
-            <div className="min-safe">
-              <p className="text-sm font-semibold text-slate-900">{currentRole === "admin" ? "Executive workspace" : "Employee workspace"}</p>
-              <p className="text-xs text-slate-500">{currentLabel || "overview"}</p>
+      {/* TopNavBar */}
+      <div className="flex-1 flex flex-col md:ml-[260px]">
+        <header className="flex justify-between items-center px-6 md:px-margin-desktop h-16 bg-surface-container-lowest border-b border-border-subtle shadow-sm sticky top-0 z-30">
+          <div className="flex-1 flex items-center">
+            {/* Quick Breadcrumbs */}
+            <div className="text-body-sm text-on-surface-variant font-semibold capitalize flex items-center gap-1.5">
+              <span>{currentRole}</span>
+              <AppIcon name="chevron_right" className="text-current" size={16} />
+              <span className="text-primary font-bold">{currentView.replace("employee-", "").replace("-dashboard", "").replace("-", " ")}</span>
             </div>
           </div>
 
@@ -182,9 +193,9 @@ export default function AppShell({ children }: AppShellProps) {
                 aria-expanded={showNotifications}
                 className="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition-colors hover:bg-slate-100"
               >
-                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">notifications</span>
-                {mounted && unreadCount > 0 && (
-                  <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-semibold text-white">
+                <AppIcon name="notifications" className="text-current" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 bg-error text-on-error w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center animate-pulse">
                     {unreadCount}
                   </span>
                 )}
@@ -205,16 +216,34 @@ export default function AppShell({ children }: AppShellProps) {
                   ) : (
                     <div className="space-y-3">
                       {notifications.map((notif) => (
-                        <div key={notif.id} className="flex items-start gap-2.5 rounded-xl bg-slate-50 p-2.5">
-                          <span className={`material-symbols-outlined mt-0.5 text-[18px] ${notif.type === "success" ? "text-emerald-600" : notif.type === "warning" ? "text-rose-600" : "text-primary"}`}>
-                            {notif.type === "success" ? "check_circle" : notif.type === "warning" ? "warning" : "info"}
+                        <div
+                          key={notif.id}
+                          className="flex items-start gap-2.5 p-2 rounded-lg bg-surface-container-low/50 hover:bg-surface-container-low transition-colors"
+                        >
+                          <span
+                            className={`shrink-0 mt-0.5 ${
+                              notif.type === "success"
+                                ? "text-leaf-green"
+                                : notif.type === "warning"
+                                ? "text-error"
+                                : "text-primary"
+                            }`}
+                          >
+                            <AppIcon
+                              name={notif.type === "success" ? "check_circle" : notif.type === "warning" ? "warning" : "assessment"}
+                              className="text-current"
+                              size={18}
+                            />
                           </span>
                           <div className="flex-1">
                             <p className="text-sm text-slate-700">{notif.text}</p>
                             <span className="mt-1 block text-[11px] text-slate-400">{notif.time}</span>
                           </div>
-                          <button onClick={() => clearNotification(notif.id)} className="text-slate-400 hover:text-slate-700">
-                            <span className="material-symbols-outlined text-sm" aria-hidden="true">close</span>
+                          <button
+                            onClick={() => clearNotification(notif.id)}
+                            className="text-outline hover:text-on-surface shrink-0 cursor-pointer"
+                          >
+                            <AppIcon name="close" className="text-current" size={16} />
                           </button>
                         </div>
                       ))}
@@ -234,28 +263,26 @@ export default function AppShell({ children }: AppShellProps) {
                 aria-expanded={showProfileMenu}
                 className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 p-1.5 transition-colors hover:bg-slate-100"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-container text-sm font-semibold text-white">
-                  {currentUser.name[0]}
+                <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm uppercase">
+                  {currentUser.fullName ? currentUser.fullName[0] : "?"}
                 </div>
               </button>
 
               {showProfileMenu && (
-                <div className="absolute right-0 mt-3 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_25px_60px_-25px_rgba(15,23,42,0.35)]">
-                  <div className="mb-2 border-b border-slate-100 px-3 py-2">
-                    <p className="truncate text-sm font-semibold text-slate-900">{currentUser.name}</p>
-                    <p className="truncate text-xs text-slate-500">{currentUser.email}</p>
+                <div className="absolute right-0 mt-3 w-48 bg-surface-white border border-border-subtle rounded-xl shadow-xl z-50 p-2">
+                  <div className="px-3 py-2 border-b border-border-subtle/50 mb-2">
+                    <p className="text-body-sm font-semibold text-on-surface truncate">{currentUser.fullName}</p>
+                    <p className="text-xs text-outline truncate">{currentUser.email}</p>
                   </div>
                   <button
                     onClick={() => {
                       setShowProfileMenu(false);
-                      if (typeof window !== "undefined") {
-                        window.location.assign("/");
-                      }
+                      logout();
                     }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 transition-colors hover:bg-rose-50"
                   >
-                    <span className="material-symbols-outlined text-sm" aria-hidden="true">logout</span>
-                    <span>Sign out</span>
+                    <AppIcon name="logout" className="text-current" size={16} />
+                    <span>Sign Out</span>
                   </button>
                 </div>
               )}

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useEsg } from "@/context/EsgContext";
+import { useSearchParams } from "next/navigation";
+import AppIcon from "@/components/AppIcon";
 
 interface GamificationViewsProps {
   activeTab: "challenges" | "approvals" | "badges" | "rewards-admin" | "rewards-employee" | "employee-challenges" | "employee-badges" | "employee-rewards" | "leaderboard";
@@ -114,7 +116,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
               onClick={() => setShowChallengeForm(!showChallengeForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
+              <AppIcon name="add" className="text-sm font-bold" />
               {showChallengeForm ? "Cancel" : "Add Challenge"}
             </button>
           </div>
@@ -302,7 +304,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                       </span>
                       <h3 className="font-bold text-body-md text-on-surface mt-2">{ch.title}</h3>
                       <p className="text-xs text-outline flex items-center gap-1 mt-1 font-semibold">
-                        <span className="material-symbols-outlined text-xs" aria-hidden="true">calendar_today</span>
+                        <AppIcon name="calendar_today" className="text-xs" />
                         Ends: {ch.deadline}
                       </p>
                     </div>
@@ -324,7 +326,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                       <div className="space-y-3">
                         <div className="flex justify-between items-center text-xs">
                           <span className="text-[#F57F17] font-semibold flex items-center gap-1">
-                            <span className="material-symbols-outlined text-sm" aria-hidden="true">schedule</span>
+                            <AppIcon name="schedule" className="text-sm" />
                             Joined (Pending Completion Proof)
                           </span>
                           <span className="font-bold text-primary">{empSub.progressPercent || 0}% Completed</span>
@@ -376,7 +378,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                     ) : (
                       <div className="flex justify-between items-center bg-surface-container-low px-3 py-2 rounded-lg">
                         <span className="text-xs text-on-surface-variant font-semibold flex items-center gap-1">
-                          <span className="material-symbols-outlined text-sm" aria-hidden="true">check_circle</span>
+                          <AppIcon name="check_circle" className="text-sm" />
                           Status:
                         </span>
                         <span
@@ -431,7 +433,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                       )}
                       {sub.proofUrl && (
                         <p className="text-xs text-outline font-semibold flex items-center gap-1">
-                          <span className="material-symbols-outlined text-xs" aria-hidden="true">attachment</span>
+                          <AppIcon name="attachment" className="text-xs" />
                           Proof: <span className="underline text-primary">{sub.proofUrl}</span>
                         </p>
                       )}
@@ -486,10 +488,10 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                       isUnlocked ? "bg-primary-container text-on-primary-container" : "bg-surface-container-high text-outline"
                     }`}
                   >
-                    <span className="material-symbols-outlined text-4xl" aria-hidden="true">{badge.icon}</span>
+                    <AppIcon name={badge.icon} className="text-4xl" />
                     {!isUnlocked && (
                       <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-inverse-surface border-2 border-surface-white flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[10px] text-inverse-on-surface font-bold" aria-hidden="true">lock</span>
+                        <AppIcon name="lock" className="text-[10px] text-inverse-on-surface font-bold" />
                       </div>
                     )}
                   </div>
@@ -522,7 +524,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
               onClick={() => setShowRewardForm(!showRewardForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
+              <AppIcon name="add" className="text-sm font-bold" />
               {showRewardForm ? "Cancel" : "Add Reward Item"}
             </button>
           </div>
@@ -604,7 +606,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
               <p className="text-body-sm text-on-surface-variant mt-1">Exchange your accumulated sustainability points for real-world rewards</p>
             </div>
             <div className="bg-surface-container-low p-4 rounded-xl border border-border-subtle flex items-center gap-2">
-              <span className="material-symbols-outlined text-tertiary text-2xl" aria-hidden="true">stars</span>
+              <AppIcon name="stars" className="text-tertiary text-2xl" />
               <div>
                 <span className="font-bold text-body-lg text-on-surface block leading-none">{currentUser.points}</span>
                 <span className="text-[10px] text-outline font-semibold">my points balance</span>
@@ -731,7 +733,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
         <div className="fixed inset-0 bg-inverse-surface/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-surface-white border border-border-subtle rounded-xl shadow-2xl p-6 max-w-sm w-full space-y-4">
             <div className="text-center space-y-2">
-              <span className="material-symbols-outlined text-[#F57F17] text-[48px]" aria-hidden="true">stars</span>
+              <AppIcon name="stars" className="text-[#F57F17] text-[48px]" />
               <h3 className="font-bold text-headline-sm text-on-surface">Redeem Reward?</h3>
               {(() => {
                 const rw = rewards.find((r) => r.id === confirmRedemptionId);

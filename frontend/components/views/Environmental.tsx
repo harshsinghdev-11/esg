@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useEsg } from "@/context/EsgContext";
+import AppIcon from "@/components/AppIcon";
 
 interface EnvironmentalViewsProps {
   activeTab: "dashboard" | "factors" | "goals" | "transactions";
@@ -76,7 +77,7 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
               <p className="text-body-sm text-on-surface-variant mt-1">Q3 2026 Emissions Overview</p>
             </div>
             <button className="bg-primary hover:bg-primary-container text-on-primary px-4 py-2 rounded-lg font-semibold text-label-md transition-colors flex items-center gap-2 cursor-pointer">
-              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">download</span>
+              <AppIcon name="download" className="text-[18px]" />
               Export Report
             </button>
           </div>
@@ -86,7 +87,7 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
             {/* Stat card 1 */}
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span className="material-symbols-outlined text-6xl text-primary font-bold" aria-hidden="true">co2</span>
+                <AppIcon name="co2" className="text-6xl text-primary font-bold" />
               </div>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Total Emissions</h3>
               <div className="flex items-baseline gap-2 mb-2">
@@ -94,7 +95,7 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
                 <span className="font-semibold text-body-sm text-on-surface-variant">kg CO2e</span>
               </div>
               <div className="flex items-center text-leaf-green font-semibold text-label-md bg-leaf-green/10 w-fit px-2 py-0.5 rounded-full">
-                <span className="material-symbols-outlined text-[14px] mr-1 font-bold" aria-hidden="true">trending_down</span>
+                <AppIcon name="trending_down" className="text-[14px] mr-1 font-bold" />
                 -5.2% vs last quarter
               </div>
             </div>
@@ -102,7 +103,7 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
             {/* Stat card 2 */}
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span className="material-symbols-outlined text-6xl text-leaf-green" aria-hidden="true">track_changes</span>
+                <AppIcon name="track_changes" className="text-6xl text-leaf-green" />
               </div>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Emissions vs Target</h3>
               <div className="flex items-baseline gap-2 mb-4">
@@ -117,7 +118,7 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
             {/* Stat card 3 */}
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                <span className="material-symbols-outlined text-6xl text-secondary" aria-hidden="true">factory</span>
+                <AppIcon name="factory" className="text-6xl text-secondary" />
               </div>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Top Emitting Dept</h3>
               <div className="font-bold text-headline-sm text-on-surface mb-1">Manufacturing</div>
@@ -164,14 +165,14 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
               <h3 className="font-semibold text-headline-sm text-on-surface mb-4">Carbon Neutrality Milestones</h3>
               <div className="space-y-4">
                 <div className="flex gap-3">
-                  <span className="material-symbols-outlined text-[#2E7D32]" aria-hidden="true">verified</span>
+                  <AppIcon name="verified" className="text-[#2E7D32]" />
                   <div>
                     <h4 className="font-bold text-body-sm">Offset 10,000 kg via tree plantation</h4>
                     <p className="text-xs text-outline">Verified by ForestGuard Services on 2026-06-15</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <span className="material-symbols-outlined text-[#2E7D32]" aria-hidden="true">verified</span>
+                  <AppIcon name="verified" className="text-[#2E7D32]" />
                   <div>
                     <h4 className="font-bold text-body-sm">Transition to 100% Renewable energy (HQ Office)</h4>
                     <p className="text-xs text-outline">Completed Q2 2026</p>
@@ -194,7 +195,7 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
               onClick={() => setShowGoalForm(!showGoalForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
+              <AppIcon name="add" className="text-sm font-bold" />
               {showGoalForm ? "Cancel" : "Set Target"}
             </button>
           </div>
@@ -279,7 +280,7 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
               onClick={() => setShowTxnForm(!showTxnForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
+              <AppIcon name="add" className="text-sm font-bold" />
               {showTxnForm ? "Cancel" : "Log Transaction"}
             </button>
           </div>
@@ -382,7 +383,7 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
               onClick={() => setShowFactorForm(!showFactorForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
+              <AppIcon name="add" className="text-sm font-bold" />
               {showFactorForm ? "Cancel" : "Add Factor"}
             </button>
           </div>
