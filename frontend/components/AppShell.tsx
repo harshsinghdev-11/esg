@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import { useEsg } from "@/context/EsgContext";
 import { useAuth } from "@/context/AuthContext";
 import { can } from "@/lib/rbac";
@@ -53,6 +52,11 @@ export default function AppShell({ children }: AppShellProps) {
   } = useEsg();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   if (loading || !currentUser) {
     return null;
@@ -95,31 +99,33 @@ export default function AppShell({ children }: AppShellProps) {
             <AppIcon name="eco" className="text-surface-white" />
           </div>
           <div>
-            <h1 className="font-bold text-headline-sm leading-tight">EcoSphere</h1>
-            <p className="text-label-md text-leaf-green opacity-80">ESG Management</p>
+            <h1 className="text-lg font-semibold">EcoSphere</h1>
+            <p className="text-sm text-emerald-200/80">ESG Operations</p>
           </div>
         </div>
 
-        {/* Sidebar Nav Links */}
-        <div className="flex-1 overflow-y-auto hide-scrollbar space-y-1">
+        <div className="mb-4 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-100/70">
+          Workspace
+        </div>
+        <div className="flex-1 space-y-1 overflow-y-auto hide-scrollbar">
           {activeLinks.map((link) => {
             const isActive = currentView === link.view;
             return (
               <button
                 key={link.view}
                 onClick={() => navigateTo(link.view)}
-                className={`w-[calc(100%-16px)] flex items-center justify-between px-4 py-2.5 mx-2 rounded-lg text-body-sm transition-all duration-150 cursor-pointer active:scale-95 ${
+                className={`flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-sm transition-all duration-150 ${
                   isActive
-                    ? "bg-primary-container text-on-primary-container font-semibold"
-                    : "text-surface-variant/80 hover:text-surface-white hover:bg-surface-white/10"
+                    ? "bg-white/15 text-white shadow-inner"
+                    : "text-slate-200/90 hover:bg-white/10 hover:text-white"
                 }`}
               >
                 <div className="flex items-center space-x-3">
                   <AppIcon name={link.icon} className="text-current" />
                   <span>{link.name}</span>
                 </div>
-                {link.badge && pendingApprovalsCount > 0 && (
-                  <span className="bg-error text-on-error font-semibold text-xs px-2 py-0.5 rounded-full">
+                {mounted && link.badge && pendingApprovalsCount > 0 && (
+                  <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-semibold text-white">
                     {pendingApprovalsCount}
                   </span>
                 )}
@@ -142,20 +148,20 @@ export default function AppShell({ children }: AppShellProps) {
           <div className="flex gap-2">
             <button
               onClick={() => handleRoleChange("employee")}
-              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold cursor-pointer transition-all active:scale-[0.98] ${
+              className={`flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition-all ${
                 currentRole === "employee"
-                  ? "bg-leaf-green text-deep-forest"
-                  : "bg-surface-white/10 hover:bg-surface-white/20 text-surface-white"
+                  ? "bg-emerald-300 text-emerald-950"
+                  : "bg-white/10 text-white hover:bg-white/20"
               }`}
             >
               Employee
             </button>
             <button
               onClick={() => handleRoleChange("admin")}
-              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold cursor-pointer transition-all active:scale-[0.98] ${
+              className={`flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition-all ${
                 currentRole === "admin"
-                  ? "bg-leaf-green text-deep-forest"
-                  : "bg-surface-white/10 hover:bg-surface-white/20 text-surface-white"
+                  ? "bg-emerald-300 text-emerald-950"
+                  : "bg-white/10 text-white hover:bg-white/20"
               }`}
             >
               Admin
@@ -176,15 +182,16 @@ export default function AppShell({ children }: AppShellProps) {
             </div>
           </div>
 
-          <div className="flex items-center space-x-4 relative">
-            {/* Notification Bell */}
+          <div className="relative flex items-center gap-3">
             <div className="relative">
               <button
                 onClick={() => {
                   setShowNotifications(!showNotifications);
                   setShowProfileMenu(false);
                 }}
-                className="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container-high cursor-pointer relative"
+                aria-label="Toggle notifications menu"
+                aria-expanded={showNotifications}
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-50 text-slate-700 transition-colors hover:bg-slate-100"
               >
                 <AppIcon name="notifications" className="text-current" />
                 {unreadCount > 0 && (
@@ -194,24 +201,18 @@ export default function AppShell({ children }: AppShellProps) {
                 )}
               </button>
 
-              {/* Notifications Dropdown Panel */}
               {showNotifications && (
-                <div className="absolute right-0 mt-3 w-80 bg-surface-white border border-border-subtle rounded-xl shadow-xl z-50 p-4 max-h-[400px] overflow-y-auto">
-                  <div className="flex justify-between items-center mb-3 pb-2 border-b border-border-subtle/50">
-                    <span className="font-semibold text-body-sm text-on-surface">Notifications</span>
+                <div className="absolute right-0 mt-3 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_25px_60px_-25px_rgba(15,23,42,0.35)]">
+                  <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span className="text-sm font-semibold text-slate-900">Notifications</span>
                     {notifications.length > 0 && (
-                      <button
-                        onClick={clearAllNotifications}
-                        className="text-xs text-primary hover:underline cursor-pointer"
-                      >
-                        Clear All
+                      <button onClick={clearAllNotifications} className="text-xs font-semibold text-primary hover:underline">
+                        Clear all
                       </button>
                     )}
                   </div>
                   {notifications.length === 0 ? (
-                    <div className="py-6 text-center text-body-sm text-outline">
-                      No new notifications
-                    </div>
+                    <div className="py-6 text-center text-sm text-slate-500">No new notifications</div>
                   ) : (
                     <div className="space-y-3">
                       {notifications.map((notif) => (
@@ -234,9 +235,9 @@ export default function AppShell({ children }: AppShellProps) {
                               size={18}
                             />
                           </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs text-on-surface leading-normal">{notif.text}</p>
-                            <span className="text-[10px] text-outline mt-1 block">{notif.time}</span>
+                          <div className="flex-1">
+                            <p className="text-sm text-slate-700">{notif.text}</p>
+                            <span className="mt-1 block text-[11px] text-slate-400">{notif.time}</span>
                           </div>
                           <button
                             onClick={() => clearNotification(notif.id)}
@@ -252,14 +253,15 @@ export default function AppShell({ children }: AppShellProps) {
               )}
             </div>
 
-            {/* Profile Dropdown */}
             <div className="relative">
               <button
                 onClick={() => {
                   setShowProfileMenu(!showProfileMenu);
                   setShowNotifications(false);
                 }}
-                className="flex items-center space-x-2 p-1.5 rounded-full hover:bg-surface-container-high transition-all cursor-pointer border border-border-subtle"
+                aria-label="Toggle user profile menu"
+                aria-expanded={showProfileMenu}
+                className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 p-1.5 transition-colors hover:bg-slate-100"
               >
                 <div className="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm uppercase">
                   {currentUser.fullName ? currentUser.fullName[0] : "?"}
@@ -277,7 +279,7 @@ export default function AppShell({ children }: AppShellProps) {
                       setShowProfileMenu(false);
                       logout();
                     }}
-                    className="w-full text-left px-3 py-2 text-body-sm text-error hover:bg-error-container/20 rounded-lg flex items-center gap-2 cursor-pointer transition-colors"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-rose-600 transition-colors hover:bg-rose-50"
                   >
                     <AppIcon name="logout" className="text-current" size={16} />
                     <span>Sign Out</span>
@@ -288,8 +290,7 @@ export default function AppShell({ children }: AppShellProps) {
           </div>
         </header>
 
-        {/* Scrollable Workspace Container */}
-        <main className="p-6 md:p-margin-desktop flex-1 overflow-y-auto max-w-container-max-width w-full mx-auto">
+        <main className="mx-auto flex-1 w-full max-w-7xl p-4 sm:p-6 md:p-8 lg:p-10">
           {children}
         </main>
       </div>

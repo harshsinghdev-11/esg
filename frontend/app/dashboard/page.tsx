@@ -1,7 +1,6 @@
 "use client";
 
 import React, { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 import AppShell from "@/components/AppShell";
 import AppIcon from "@/components/AppIcon";
 
@@ -17,6 +16,7 @@ import GovernanceViews from "@/components/views/Governance";
 import GamificationViews from "@/components/views/Gamification";
 import ReportsViews from "@/components/views/Reports";
 import SettingsViews from "@/components/views/Settings";
+import { EsgProvider } from "@/context/EsgContext";
 
 function DashboardContent() {
   const searchParams = useSearchParams();

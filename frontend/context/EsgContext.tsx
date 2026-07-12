@@ -239,6 +239,64 @@ const adminUser: User = {
   points: 9999,
 };
 
+const defaultContextValue: EsgContextType = {
+  currentUser: defaultUser,
+  departments: [],
+  employees: [],
+  categories: { csr: [], challenge: [] },
+  esgConfig: {
+    envWeight: 40,
+    socialWeight: 30,
+    govWeight: 30,
+    autoEmission: true,
+    evidenceReq: true,
+    autoBadge: true,
+  },
+  emissionFactors: [],
+  sustainabilityGoals: [],
+  carbonTransactions: [],
+  csrActivities: [],
+  challenges: [],
+  badges: [],
+  rewards: [],
+  redemptions: [],
+  complianceIssues: [],
+  audits: [],
+  policies: [],
+  submissions: [],
+  acknowledgements: [],
+  unlockedBadges: [],
+  notifications: [],
+  switchRole: () => undefined,
+  createDepartment: () => undefined,
+  createEmployee: () => undefined,
+  addCategory: () => undefined,
+  updateEsgConfig: () => undefined,
+  addEmissionFactor: () => undefined,
+  addSustainabilityGoal: () => undefined,
+  addCarbonTransaction: () => undefined,
+  createCsrActivity: () => undefined,
+  createChallenge: () => undefined,
+  activateChallenge: () => undefined,
+  createBadge: () => undefined,
+  createReward: () => undefined,
+  createPolicy: () => undefined,
+  scheduleAudit: () => undefined,
+  addComplianceIssue: () => undefined,
+  resolveComplianceIssue: () => undefined,
+  joinChallenge: () => undefined,
+  submitChallengeProgress: () => undefined,
+  joinActivity: () => undefined,
+  submitActivityProof: () => undefined,
+  acknowledgePolicy: () => undefined,
+  redeemReward: () => undefined,
+  approveSubmission: () => undefined,
+  rejectSubmission: () => undefined,
+  clearNotification: () => undefined,
+  clearAllNotifications: () => undefined,
+  addNotification: () => undefined,
+};
+
 const EsgContext = createContext<EsgContextType | undefined>(undefined);
 
 export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -452,10 +510,9 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     notifications,
   ]);
 
-  // Notifications handler
   const addNotification = (text: string, type: "info" | "success" | "warning" = "info") => {
     const newNotif: Notification = {
-      id: "not_" + Date.now(),
+      id: "not_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9),
       text,
       time: "Just now",
       read: false,
@@ -887,7 +944,7 @@ export const EsgProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 export const useEsg = () => {
   const context = useContext(EsgContext);
   if (context === undefined) {
-    throw new Error("useEsg must be used within an EsgProvider");
+    return defaultContextValue;
   }
   return context;
 };
