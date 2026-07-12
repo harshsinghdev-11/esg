@@ -74,14 +74,14 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
-              <span className="material-symbols-outlined text-4xl text-primary mb-2 block">volunteer_activism</span>
+              <span className="material-symbols-outlined text-4xl text-primary mb-2 block" aria-hidden="true">volunteer_activism</span>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Community Hours</h3>
               <div className="font-bold text-headline-lg text-primary">1,240 hrs</div>
               <span className="text-xs text-leaf-green font-semibold mt-1 block">+12% vs last quarter</span>
             </div>
 
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
-              <span className="material-symbols-outlined text-4xl text-primary mb-2 block">school</span>
+              <span className="material-symbols-outlined text-4xl text-primary mb-2 block" aria-hidden="true">school</span>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Training Completion</h3>
               <div className="font-bold text-headline-lg text-primary">94.2%</div>
               <div className="w-full bg-surface-container-high h-2 rounded-full mt-2 overflow-hidden">
@@ -90,7 +90,7 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
             </div>
 
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
-              <span className="material-symbols-outlined text-4xl text-primary mb-2 block">diversity_3</span>
+              <span className="material-symbols-outlined text-4xl text-primary mb-2 block" aria-hidden="true">diversity_3</span>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Diversity Index</h3>
               <div className="font-bold text-headline-lg text-primary">76 / 100</div>
               <span className="text-xs text-outline font-semibold mt-1 block">Meets industry benchmark</span>
@@ -214,7 +214,7 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
               onClick={() => setShowActivityForm(!showActivityForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
               {showActivityForm ? "Cancel" : "Add Activity"}
             </button>
           </div>
@@ -349,7 +349,7 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
                       onClick={() => setSelectedActivityId(null)}
                       className="text-primary hover:underline text-xs font-semibold flex items-center gap-1 cursor-pointer mb-2"
                     >
-                      <span className="material-symbols-outlined text-xs">arrow_back</span>
+                      <span className="material-symbols-outlined text-xs" aria-hidden="true">arrow_back</span>
                       Back to activities list
                     </button>
                     <h3 className="font-bold text-headline-sm text-on-surface">{act.title}</h3>
@@ -377,7 +377,7 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
                             <p className="text-xs text-outline">Submitted on {sub.date}</p>
                             {sub.proofUrl && (
                               <p className="text-xs font-semibold text-primary mt-1 flex items-center gap-1">
-                                <span className="material-symbols-outlined text-xs">attachment</span>
+                                <span className="material-symbols-outlined text-xs" aria-hidden="true">attachment</span>
                                 Proof Attachment: <span className="underline">{sub.proofUrl}</span>
                               </p>
                             )}
@@ -446,7 +446,7 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
                       </span>
                       <h3 className="font-bold text-body-md text-on-surface mt-2">{act.title}</h3>
                       <p className="text-xs text-outline flex items-center gap-1 mt-1 font-semibold">
-                        <span className="material-symbols-outlined text-xs">calendar_today</span>
+                        <span className="material-symbols-outlined text-xs" aria-hidden="true">calendar_today</span>
                         Scheduled: {act.date}
                       </p>
                     </div>
@@ -464,7 +464,7 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
                     ) : empSub.status === "Pending" && !empSub.proofUrl ? (
                       <div className="space-y-2">
                         <div className="text-xs text-[#F57F17] font-semibold flex items-center gap-1">
-                          <span className="material-symbols-outlined text-sm">schedule</span>
+                          <span className="material-symbols-outlined text-sm" aria-hidden="true">schedule</span>
                           Registered (Pending Proof Upload)
                         </div>
                         
@@ -497,7 +497,7 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
                     ) : (
                       <div className="flex justify-between items-center bg-surface-container-low px-3 py-2 rounded-lg">
                         <span className="text-xs text-on-surface-variant font-semibold flex items-center gap-1">
-                          <span className="material-symbols-outlined text-sm">check_circle</span>
+                          <span className="material-symbols-outlined text-sm" aria-hidden="true">check_circle</span>
                           Status:
                         </span>
                         <span

@@ -121,7 +121,7 @@ export default function DashboardPage() {
       <Suspense fallback={
         <div className="min-h-screen w-full flex items-center justify-center bg-surface">
           <div className="flex flex-col items-center gap-4">
-            <span className="material-symbols-outlined text-primary text-[48px] animate-spin">
+            <span className="material-symbols-outlined text-primary text-[48px] animate-spin" aria-hidden="true">
               progress_activity
             </span>
             <p className="text-body-md text-outline font-semibold">Loading EcoSphere...</p>

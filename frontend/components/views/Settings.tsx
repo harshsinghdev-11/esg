@@ -103,7 +103,7 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
               onClick={() => setShowDeptForm(!showDeptForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
               {showDeptForm ? "Cancel" : "Add Department"}
             </button>
           </div>
@@ -175,7 +175,7 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
               onClick={() => setShowEmpForm(!showEmpForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">person_add</span>
+              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">person_add</span>
               {showEmpForm ? "Cancel" : "Add Employee"}
             </button>
           </div>
@@ -278,7 +278,7 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
               onClick={() => setShowCatForm(!showCatForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
               {showCatForm ? "Cancel" : "Add Category"}
             </button>
           </div>

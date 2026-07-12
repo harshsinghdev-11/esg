@@ -64,7 +64,7 @@ export default function ReportsViews() {
             {/* Report 1 */}
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-5 shadow-sm space-y-4 hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start">
-                <span className="material-symbols-outlined text-4xl text-primary">assessment</span>
+                <span className="material-symbols-outlined text-4xl text-primary" aria-hidden="true">assessment</span>
                 <span className="bg-leaf-green/10 text-[#2E7D32] px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase">
                   Quarterly
                 </span>
@@ -89,7 +89,7 @@ export default function ReportsViews() {
             {/* Report 2 */}
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-5 shadow-sm space-y-4 hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start">
-                <span className="material-symbols-outlined text-4xl text-primary">co2</span>
+                <span className="material-symbols-outlined text-4xl text-primary" aria-hidden="true">co2</span>
                 <span className="bg-[#E3F2FD] text-[#1565C0] px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase">
                   Monthly
                 </span>
@@ -123,7 +123,7 @@ export default function ReportsViews() {
                 onClick={() => setActiveSubTab("portal")}
                 className="text-primary hover:underline text-xs font-semibold flex items-center gap-1 cursor-pointer mb-2"
               >
-                <span className="material-symbols-outlined text-xs">arrow_back</span>
+                <span className="material-symbols-outlined text-xs" aria-hidden="true">arrow_back</span>
                 Back to Reports Portal
               </button>
               <h2 className="font-bold text-headline-sm text-on-surface">{selectedReportTitle}</h2>
@@ -135,7 +135,7 @@ export default function ReportsViews() {
               disabled={isExporting}
               className="bg-primary hover:bg-primary-container text-on-primary px-5 py-2.5 rounded-lg text-xs font-semibold flex items-center gap-2 cursor-pointer transition-all active:scale-95 shrink-0"
             >
-              <span className="material-symbols-outlined text-sm">
+              <span className="material-symbols-outlined text-sm" aria-hidden="true">
                 {isExporting ? "progress_activity" : "picture_as_pdf"}
               </span>
               <span>{isExporting ? "Exporting PDF..." : "Export as PDF"}</span>
@@ -273,7 +273,7 @@ export default function ReportsViews() {
                       onClick={triggerExport}
                       className="bg-surface-container-low border border-border-subtle hover:bg-surface-container-high px-4 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
                     >
-                      <span className="material-symbols-outlined text-sm">download</span> Export Sheet
+                      <span className="material-symbols-outlined text-sm" aria-hidden="true">download</span> Export Sheet
                     </button>
                   </div>
 
@@ -326,7 +326,7 @@ export default function ReportsViews() {
                 </div>
               ) : (
                 <div className="bg-surface-container-lowest border border-border-subtle border-dashed rounded-xl p-8 text-center text-outline italic h-full flex flex-col justify-center items-center">
-                  <span className="material-symbols-outlined text-4xl mb-2">analytics</span>
+                  <span className="material-symbols-outlined text-4xl mb-2" aria-hidden="true">analytics</span>
                   <span>Select metrics on the left and click Compile to build a preview.</span>
                 </div>
               )}

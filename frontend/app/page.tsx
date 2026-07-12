@@ -2,11 +2,9 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { EsgProvider, useEsg } from "@/context/EsgContext";
 
-function LoginContent() {
+export default function LoginPage() {
   const router = useRouter();
-  const { switchRole } = useEsg();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -14,180 +12,143 @@ function LoginContent() {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     if (email.toLowerCase().includes("admin")) {
-      switchRole("admin");
       router.push("/dashboard?role=admin&view=org-dashboard");
     } else {
-      switchRole("employee");
       router.push("/dashboard?role=employee&view=employee-dashboard");
     }
   };
 
   const handleQuickLogin = (role: "admin" | "employee") => {
-    switchRole(role);
-    if (role === "admin") {
-      router.push("/dashboard?role=admin&view=org-dashboard");
-    } else {
-      router.push("/dashboard?role=employee&view=employee-dashboard");
-    }
+    router.push(role === "admin" ? "/dashboard?role=admin&view=org-dashboard" : "/dashboard?role=employee&view=employee-dashboard");
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 md:p-margin-desktop font-sans text-on-surface antialiased relative overflow-hidden bg-surface">
-      {/* Decorative background elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary-fixed/20 blur-[100px] z-0 pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-leaf-green/10 blur-[120px] z-0 pointer-events-none"></div>
+    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top_left,rgba(0,99,104,0.12),transparent_25%),linear-gradient(135deg,#f4f7fb_0%,#fcfefe_100%)] px-4 py-8 text-slate-800 sm:px-6 lg:px-8">
+      <main className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-7xl items-center justify-center">
+        <div className="grid w-full overflow-hidden rounded-[32px] border border-slate-200/80 bg-white/80 shadow-[0_35px_90px_-30px_rgba(2,48,44,0.35)] backdrop-blur-xl lg:grid-cols-[1.05fr_0.95fr]">
+          <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0d3d1b_0%,#0b5c41_55%,#0b3f2d_100%)] p-8 text-white sm:p-10 lg:p-12">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.2),transparent_28%)]" />
+            <div className="relative z-10 flex h-full flex-col justify-between gap-8">
+              <div>
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm font-semibold tracking-[0.24em] text-emerald-50/90 uppercase">
+                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">eco</span>
+                  Climate ready operations
+                </div>
+                <h1 className="max-w-xl text-3xl font-semibold leading-tight sm:text-4xl">
+                  Bring sustainability reporting into one clear operating view.
+                </h1>
+                <p className="mt-4 max-w-lg text-base leading-7 text-emerald-50/90">
+                  Track emissions, social impact, governance tasks, and team participation with a modern workspace built for executive action.
+                </p>
+              </div>
 
-      {/* Main Content Canvas */}
-      <main className="w-full max-w-md relative z-10">
-        <div className="glass-panel rounded-xl shadow-[0px_20px_25px_-5px_rgba(0,0,0,0.1)] border border-surface-white p-8 md:p-10 flex flex-col items-center">
-          
-          {/* Logo & Brand Header */}
-          <div className="flex flex-col items-center mb-6 w-full text-center">
-            <div className="mb-4 transition-all active:scale-[0.98] cursor-pointer">
-              <span className="material-symbols-outlined text-primary text-[56px] bg-surface-white shadow-sm border border-border-subtle rounded-xl p-2">
-                eco
-              </span>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  { label: "Live metrics", value: "24/7" },
+                  { label: "Audit readiness", value: "98%" },
+                  { label: "Team engagement", value: "+18%" },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm">
+                    <p className="text-2xl font-semibold">{item.value}</p>
+                    <p className="mt-1 text-sm text-emerald-50/80">{item.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h1 className="font-bold text-headline-sm text-primary mb-2">EcoSphere</h1>
-            <p className="text-body-sm text-on-surface-variant max-w-[280px]">
-              Measure. Manage. Improve your ESG impact.
-            </p>
-          </div>
+          </section>
 
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="w-full flex flex-col gap-4">
-            {/* Email Input */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className="font-semibold text-label-md text-on-surface">
-                Email Address
+          <section className="flex flex-col justify-center bg-slate-50/70 p-6 sm:p-8 lg:p-10">
+            <div className="mb-7 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-container text-2xl font-semibold text-white shadow-sm">
+                <span className="material-symbols-outlined" aria-hidden="true">eco</span>
+              </div>
+              <div>
+                <h2 className="text-xl font-semibold text-slate-900">EcoSphere</h2>
+                <p className="text-sm text-slate-500">Secure ESG workspace</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label htmlFor="email" className="text-sm font-semibold text-slate-700">Email address</label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">mail</span>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@company.com"
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="password" className="text-sm font-semibold text-slate-700">Password</label>
+                  <a href="#" className="text-sm font-medium text-primary hover:underline">Forgot password?</a>
+                </div>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">lock</span>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-10 pr-10 text-sm text-slate-700 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-700"
+                    aria-label="Toggle password visibility"
+                  >
+                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{showPassword ? "visibility" : "visibility_off"}</span>
+                  </button>
+                </div>
+              </div>
+
+              <label className="flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary" />
+                Remember me for 30 days
               </label>
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">
-                  mail
-                </span>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
-                  className="w-full pl-10 pr-4 py-2 bg-surface-white border border-border-subtle rounded-lg text-body-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-              </div>
-            </div>
 
-            {/* Password Input */}
-            <div className="flex flex-col gap-1.5">
-              <div className="flex justify-between items-center">
-                <label htmlFor="password" className="font-semibold text-label-md text-on-surface">
-                  Password
-                </label>
-                <a
-                  href="#"
-                  className="text-body-sm text-primary hover:text-primary-container hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20 rounded"
-                >
-                  Forgot password?
-                </a>
-              </div>
-              <div className="relative">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-[20px] pointer-events-none">
-                  lock
-                </span>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  id="password"
-                  name="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2 bg-surface-white border border-border-subtle rounded-lg text-body-sm text-on-surface placeholder:text-outline-variant focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface focus:outline-none focus:text-primary transition-colors"
-                  aria-label="Toggle password visibility"
-                >
-                  <span className="material-symbols-outlined text-[20px]">
-                    {showPassword ? "visibility" : "visibility_off"}
-                  </span>
+              <button
+                type="submit"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-container"
+              >
+                <span>Log in</span>
+                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">arrow_forward</span>
+              </button>
+            </form>
+
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white/80 p-4">
+              <p className="mb-3 text-center text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Quick demo access</p>
+              <div className="flex flex-col gap-2">
+                <button onClick={() => handleQuickLogin("employee")} className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">badge</span>
+                  <span>Continue as Employee</span>
+                </button>
+                <button onClick={() => handleQuickLogin("admin")} className="flex w-full items-center justify-center gap-2 rounded-xl bg-deep-forest px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-900">
+                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">shield_person</span>
+                  <span>Continue as Admin</span>
                 </button>
               </div>
             </div>
 
-            {/* Remember Me */}
-            <div className="flex items-center">
-              <input
-                id="remember-me"
-                name="remember-me"
-                type="checkbox"
-                className="h-4 w-4 rounded border-border-subtle text-primary focus:ring-primary focus:ring-2 bg-surface-white cursor-pointer transition-all"
-              />
-              <label htmlFor="remember-me" className="ml-2 block text-body-sm text-on-surface-variant cursor-pointer">
-                Remember me for 30 days
-              </label>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="w-full mt-2 bg-primary hover:bg-primary-container text-on-primary font-semibold text-label-md py-2.5 px-4 rounded-lg shadow-sm hover:shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <span>Log In</span>
-              <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-            </button>
-          </form>
-
-          {/* Quick Demo Logins (Crucial for Reviewer) */}
-          <div className="w-full mt-6 pt-5 border-t border-border-subtle/50 text-center">
-            <p className="text-label-md text-outline font-semibold mb-3">QUICK PROTOTYPE DEMO ACCESS</p>
-            <div className="flex flex-col gap-2">
-              <button
-                onClick={() => handleQuickLogin("employee")}
-                className="w-full bg-surface-container-low border border-border-subtle hover:bg-surface-container-high text-primary font-semibold py-2 px-4 rounded-lg text-body-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-sm">badge</span>
-                <span>Log In as Employee (Alex)</span>
-              </button>
-              <button
-                onClick={() => handleQuickLogin("admin")}
-                className="w-full bg-deep-forest text-on-primary hover:bg-deep-forest/90 font-semibold py-2 px-4 rounded-lg text-body-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-sm">shield_person</span>
-                <span>Log In as Admin (Sarah)</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Sign Up Prompt */}
-          <p className="mt-6 text-body-sm text-on-surface-variant text-center">
-            Don't have an account?{" "}
-            <a
-              href="#"
-              className="font-semibold text-label-md text-primary hover:text-primary-container hover:underline transition-colors"
-            >
-              Request access
-            </a>
-          </p>
-        </div>
-
-        {/* Footer Links */}
-        <div className="mt-6 flex justify-center gap-6 text-body-sm text-outline">
-          <a href="#" className="hover:text-primary transition-colors">Privacy Policy</a>
-          <a href="#" className="hover:text-primary transition-colors">Terms of Service</a>
+            <p className="mt-6 text-center text-sm text-slate-500">
+              Don’t have access yet?{' '}
+              <a href="#" className="font-semibold text-primary hover:underline">Request access</a>
+            </p>
+          </section>
         </div>
       </main>
     </div>
-  );
-}
-
-export default function LoginPage() {
-  return (
-    <EsgProvider>
-      <LoginContent />
-    </EsgProvider>
   );
 }

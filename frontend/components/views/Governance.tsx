@@ -106,21 +106,21 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
           {/* Stats Bento Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
-              <span className="material-symbols-outlined text-4xl text-[#F57F17] mb-2 block">task_alt</span>
+              <span className="material-symbols-outlined text-4xl text-[#F57F17] mb-2 block" aria-hidden="true">task_alt</span>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Average Policy Ack</h3>
               <div className="font-bold text-headline-lg text-primary">87.5%</div>
               <span className="text-xs text-outline font-semibold mt-1 block">Target: 95% by end of year</span>
             </div>
 
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
-              <span className="material-symbols-outlined text-4xl text-primary mb-2 block">fact_check</span>
+              <span className="material-symbols-outlined text-4xl text-primary mb-2 block" aria-hidden="true">fact_check</span>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Audit Status</h3>
               <div className="font-bold text-headline-lg text-[#2E7D32]">2 / 3 Complete</div>
               <span className="text-xs text-outline font-semibold mt-1 block">1 Scheduled in HR</span>
             </div>
 
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
-              <span className="material-symbols-outlined text-4xl text-error mb-2 block">gavel</span>
+              <span className="material-symbols-outlined text-4xl text-error mb-2 block" aria-hidden="true">gavel</span>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Unresolved Compliance</h3>
               <div className="font-bold text-headline-lg text-error">
                 {complianceIssues.filter((c) => c.status === "Open").length} Open
@@ -142,7 +142,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
               onClick={() => setShowPolicyForm(!showPolicyForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
               {showPolicyForm ? "Cancel" : "Publish Policy"}
             </button>
           </div>
@@ -287,7 +287,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
                       <div className="pt-4 border-t border-border-subtle flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         {isAcked ? (
                           <div className="flex items-center gap-2 text-leaf-green font-bold text-body-sm">
-                            <span className="material-symbols-outlined text-lg">check_circle</span>
+                            <span className="material-symbols-outlined text-lg" aria-hidden="true">check_circle</span>
                             You acknowledged this policy.
                           </div>
                         ) : (
@@ -341,7 +341,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
               onClick={() => setShowAuditForm(!showAuditForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
               {showAuditForm ? "Cancel" : "Schedule Audit"}
             </button>
           </div>
@@ -441,7 +441,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
               onClick={() => setShowIssueForm(!showIssueForm)}
               className="bg-primary text-on-primary hover:bg-primary-container px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <span className="material-symbols-outlined text-sm font-bold">add</span>
+              <span className="material-symbols-outlined text-sm font-bold" aria-hidden="true">add</span>
               {showIssueForm ? "Cancel" : "Report Issue"}
             </button>
           </div>
@@ -562,7 +562,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
                         </button>
                       ) : (
                         <span className="text-xs text-[#2E7D32] font-semibold flex items-center justify-end gap-1">
-                          <span className="material-symbols-outlined text-xs">done_all</span> Resolved
+                          <span className="material-symbols-outlined text-xs" aria-hidden="true">done_all</span> Resolved
                         </span>
                       )}
                     </td>

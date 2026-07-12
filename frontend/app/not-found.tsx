@@ -4,7 +4,7 @@ export default function NotFound() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-surface text-on-surface">
       <div className="glass-panel border border-border-subtle rounded-xl p-8 max-w-md shadow-lg space-y-4">
-        <span className="material-symbols-outlined text-primary text-[48px]">
+        <span className="material-symbols-outlined text-primary text-[48px]" aria-hidden="true">
           folder_off
         </span>
         <h2 className="font-bold text-headline-sm text-primary">Page Not Found</h2>
