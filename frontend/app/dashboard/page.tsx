@@ -6,7 +6,6 @@ import AppShell from "@/components/AppShell";
 import AppIcon from "@/components/AppIcon";
 
 import { useAuth } from "@/context/AuthContext";
-import { can } from "@/lib/rbac";
 
 // Import view components
 import OrgDashboardView from "@/components/views/AdminDashboard";
@@ -25,7 +24,7 @@ function DashboardContent() {
   if (loading) return null; // Let the Suspense or AuthContext handle loading
   
   const role = currentUser?.role || "EMPLOYEE";
-  const isEmployee = !can.manageOrg(role) && !can.manageEmployees(role);
+  const isEmployee = role === "EMPLOYEE";
   const view = searchParams.get("view") || (isEmployee ? "employee-dashboard" : "org-dashboard");
 
   // Route rendering based on active view name

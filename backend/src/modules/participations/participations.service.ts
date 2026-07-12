@@ -70,6 +70,34 @@ export const participationsService = {
     return participation;
   },
 
+  async updateProof(organizationId: string, id: string, employeeId: string, data: any) {
+    const participation = await prisma.employeeParticipation.findFirst({
+      where: { employeeParticipationId: id },
+      include: {
+        csrActivity: true,
+      },
+    });
+
+    if (!participation || participation.csrActivity.organizationId !== organizationId) {
+      throw new NotFoundError('Participation not found');
+    }
+
+    if (participation.employeeId !== employeeId) {
+      throw new ConflictError('You can only update your own participation proof');
+    }
+
+    if (participation.approvalStatus === ApprovalStatus.APPROVED) {
+      throw new ConflictError('Cannot update proof for an approved participation');
+    }
+
+    return prisma.employeeParticipation.update({
+      where: { employeeParticipationId: id },
+      data: {
+        proofUrl: data.proofUrl,
+      },
+    });
+  },
+
   async approve(organizationId: string, id: string, approverId: string) {
     const participation = await prisma.employeeParticipation.findFirst({
       where: { employeeParticipationId: id },

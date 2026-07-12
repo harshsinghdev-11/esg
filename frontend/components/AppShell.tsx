@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEsg } from "@/context/EsgContext";
 import { useAuth } from "@/context/AuthContext";
-import { can } from "@/lib/rbac";
 import AppIcon from "@/components/AppIcon";
 
 interface AppShellProps {
@@ -58,22 +57,13 @@ export default function AppShell({ children }: AppShellProps) {
     return null;
   }
 
-  const role = currentUser.role;
-  const isEmployee = !can.manageOrg(role) && !can.manageEmployees(role);
+  const isEmployee = currentUser.role === "EMPLOYEE";
   const currentRole = isEmployee ? "employee" : "admin";
-  const currentRoleName = isEmployee ? "employee" : "admin";
+  const currentRoleName = isEmployee ? "Employee" : "Admin";
   const currentView = searchParams.get("view") || (isEmployee ? "employee-dashboard" : "org-dashboard");
 
   const navigateTo = (viewName: string) => {
     router.push(`/dashboard?view=${viewName}`);
-  };
-
-  const handleRoleChange = (selectedRole: "admin" | "employee") => {
-    // Note: Temporary frontend switch for demo purposes, 
-    // real app would re-login or change account
-    const defaultView = selectedRole === "admin" ? "org-dashboard" : "employee-dashboard";
-    router.push(`/dashboard?view=${defaultView}`);
-    setShowProfileMenu(false);
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -128,7 +118,7 @@ export default function AppShell({ children }: AppShellProps) {
           })}
         </div>
 
-        {/* Role Switcher Widget at bottom of sidebar */}
+        {/* Account Summary */}
         <div className="mx-4 mt-auto p-4 bg-surface-white/10 border border-surface-white/10 rounded-xl">
           <div className="flex items-center space-x-3 mb-3">
             <div className="w-8 h-8 rounded-full bg-primary-fixed-dim/30 flex items-center justify-center text-sm font-bold text-leaf-green uppercase">
@@ -136,30 +126,14 @@ export default function AppShell({ children }: AppShellProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-body-sm font-semibold text-surface-white truncate">{currentUser.fullName}</p>
-              <p className="text-xs text-surface-variant truncate capitalize">{currentRoleName} View</p>
+              <p className="text-xs text-surface-variant truncate">{currentRoleName} Workspace</p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleRoleChange("employee")}
-              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold cursor-pointer transition-all active:scale-[0.98] ${
-                currentRole === "employee"
-                  ? "bg-leaf-green text-deep-forest"
-                  : "bg-surface-white/10 hover:bg-surface-white/20 text-surface-white"
-              }`}
-            >
-              Employee
-            </button>
-            <button
-              onClick={() => handleRoleChange("admin")}
-              className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold cursor-pointer transition-all active:scale-[0.98] ${
-                currentRole === "admin"
-                  ? "bg-leaf-green text-deep-forest"
-                  : "bg-surface-white/10 hover:bg-surface-white/20 text-surface-white"
-              }`}
-            >
-              Admin
-            </button>
+          <div className="flex items-center justify-between gap-3 rounded-lg bg-surface-white/10 px-3 py-2">
+            <span className="text-xs font-semibold text-surface-white/80">Role</span>
+            <span className="rounded-full bg-leaf-green px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-deep-forest">
+              {currentUser.role.replaceAll("_", " ")}
+            </span>
           </div>
         </div>
       </nav>

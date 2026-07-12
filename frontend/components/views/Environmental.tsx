@@ -13,6 +13,7 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
     emissionFactors,
     sustainabilityGoals,
     carbonTransactions,
+    environmentalSummary,
     addEmissionFactor,
     addSustainabilityGoal,
     addCarbonTransaction,
@@ -29,9 +30,11 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
   const [goalTarget, setGoalTarget] = useState("");
 
   const [showTxnForm, setShowTxnForm] = useState(false);
-  const [txnSource, setTxnSource] = useState("");
+  const [txnSource, setTxnSource] = useState<"PURCHASE" | "MANUFACTURING" | "EXPENSE" | "FLEET" | "MANUAL">("MANUAL");
   const [txnDept, setTxnDept] = useState("");
-  const [txnEmissions, setTxnEmissions] = useState("");
+  const [txnFactor, setTxnFactor] = useState("");
+  const [txnQuantity, setTxnQuantity] = useState("");
+  const [txnDate, setTxnDate] = useState(new Date().toISOString().slice(0, 10));
 
   // Submissions Handlers
   const handleAddFactor = (e: React.FormEvent) => {
@@ -56,14 +59,34 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
 
   const handleAddTxn = (e: React.FormEvent) => {
     e.preventDefault();
-    if (txnSource && txnDept && txnEmissions) {
-      addCarbonTransaction(txnSource, txnDept, txnEmissions + " kg CO2");
-      setTxnSource("");
+    if (txnSource && txnDept && txnFactor && txnQuantity && txnDate) {
+      addCarbonTransaction({
+        sourceType: txnSource,
+        departmentId: txnDept,
+        emissionFactorId: txnFactor,
+        quantity: Number(txnQuantity),
+        transactionDate: txnDate,
+      });
+      setTxnSource("MANUAL");
       setTxnDept("");
-      setTxnEmissions("");
+      setTxnFactor("");
+      setTxnQuantity("");
+      setTxnDate(new Date().toISOString().slice(0, 10));
       setShowTxnForm(false);
     }
   };
+
+  const totalEmissions = Number(environmentalSummary?.totalCo2eEmitted ?? 0);
+  const totalGoalTarget = sustainabilityGoals.reduce((sum, goal) => {
+    const match = goal.target.match(/-?\d+(\.\d+)?/);
+    return sum + Number(match?.[0] ?? 0);
+  }, 0);
+  const totalGoalProgress = sustainabilityGoals.reduce((sum, goal) => {
+    const match = goal.progress.match(/-?\d+(\.\d+)?/);
+    return sum + Number(match?.[0] ?? 0);
+  }, 0);
+  const targetPct = totalGoalTarget > 0 ? Math.min(100, (totalGoalProgress / totalGoalTarget) * 100) : 0;
+  const topSource = environmentalSummary?.emissionsBySource?.[0];
 
   return (
     <div className="space-y-6">
@@ -91,12 +114,12 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
               </div>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Total Emissions</h3>
               <div className="flex items-baseline gap-2 mb-2">
-                <span className="font-bold text-headline-lg text-primary">42,850</span>
+                <span className="font-bold text-headline-lg text-primary">{totalEmissions.toLocaleString()}</span>
                 <span className="font-semibold text-body-sm text-on-surface-variant">kg CO2e</span>
               </div>
               <div className="flex items-center text-leaf-green font-semibold text-label-md bg-leaf-green/10 w-fit px-2 py-0.5 rounded-full">
-                <AppIcon name="trending_down" className="text-[14px] mr-1 font-bold" />
-                -5.2% vs last quarter
+                <AppIcon name="analytics" className="text-[14px] mr-1 font-bold" />
+                Live from carbon transactions
               </div>
             </div>
 
@@ -107,11 +130,11 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
               </div>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Emissions vs Target</h3>
               <div className="flex items-baseline gap-2 mb-4">
-                <span className="font-bold text-headline-lg text-primary">92%</span>
-                <span className="font-semibold text-body-sm text-on-surface-variant">of Q3 goal</span>
+                <span className="font-bold text-headline-lg text-primary">{targetPct.toFixed(0)}%</span>
+                <span className="font-semibold text-body-sm text-on-surface-variant">of active goals</span>
               </div>
               <div className="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
-                <div className="bg-leaf-green h-full rounded-full" style={{ width: "92%" }}></div>
+                <div className="bg-leaf-green h-full rounded-full" style={{ width: `${targetPct}%` }}></div>
               </div>
             </div>
 
@@ -121,8 +144,10 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
                 <AppIcon name="factory" className="text-6xl text-secondary" />
               </div>
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-2">Top Emitting Dept</h3>
-              <div className="font-bold text-headline-sm text-on-surface mb-1">Manufacturing</div>
-              <div className="text-xs text-outline font-semibold">62% of total corporate output</div>
+              <div className="font-bold text-headline-sm text-on-surface mb-1">{topSource ? topSource.sourceType : "No data yet"}</div>
+              <div className="text-xs text-outline font-semibold">
+                {topSource ? `${Number(topSource.totalCo2eEmitted ?? 0).toLocaleString()} kg CO2e logged` : "Add transactions to see trends"}
+              </div>
             </div>
           </div>
 
@@ -131,53 +156,48 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
               <h3 className="font-semibold text-headline-sm text-on-surface mb-6">Emissions by Source</h3>
               <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-body-sm font-semibold mb-1">
-                    <span>Scope 1: Direct (Generators/Company Vehicles)</span>
-                    <span className="font-bold">24,500 kg CO2</span>
-                  </div>
-                  <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-                    <div className="bg-primary h-full" style={{ width: "57%" }}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-body-sm font-semibold mb-1">
-                    <span>Scope 2: Indirect (Purchased Electricity)</span>
-                    <span className="font-bold">14,200 kg CO2</span>
-                  </div>
-                  <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-                    <div className="bg-[#1565C0] h-full" style={{ width: "33%" }}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-body-sm font-semibold mb-1">
-                    <span>Scope 3: Other Indirect (Business Flights/Commute)</span>
-                    <span className="font-bold">4,150 kg CO2</span>
-                  </div>
-                  <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
-                    <div className="bg-[#FFF8E1] border border-[#FFE0B2] h-full" style={{ width: "10%" }}></div>
-                  </div>
-                </div>
+                {(environmentalSummary?.emissionsBySource ?? []).length === 0 ? (
+                  <p className="text-body-sm text-outline">No emissions data available yet.</p>
+                ) : (
+                  environmentalSummary.emissionsBySource.map((item: any) => {
+                    const share = totalEmissions > 0 ? (Number(item.totalCo2eEmitted ?? 0) / totalEmissions) * 100 : 0;
+                    return (
+                      <div key={item.sourceType}>
+                        <div className="flex justify-between text-body-sm font-semibold mb-1">
+                          <span>{item.sourceType}</span>
+                          <span className="font-bold">{Number(item.totalCo2eEmitted ?? 0).toLocaleString()} kg CO2e</span>
+                        </div>
+                        <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                          <div className="bg-primary h-full" style={{ width: `${share}%` }}></div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow flex flex-col justify-between">
-              <h3 className="font-semibold text-headline-sm text-on-surface mb-4">Carbon Neutrality Milestones</h3>
+              <h3 className="font-semibold text-headline-sm text-on-surface mb-4">Active Goal Progress</h3>
               <div className="space-y-4">
-                <div className="flex gap-3">
-                  <AppIcon name="verified" className="text-[#2E7D32]" />
-                  <div>
-                    <h4 className="font-bold text-body-sm">Offset 10,000 kg via tree plantation</h4>
-                    <p className="text-xs text-outline">Verified by ForestGuard Services on 2026-06-15</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <AppIcon name="verified" className="text-[#2E7D32]" />
-                  <div>
-                    <h4 className="font-bold text-body-sm">Transition to 100% Renewable energy (HQ Office)</h4>
-                    <p className="text-xs text-outline">Completed Q2 2026</p>
-                  </div>
-                </div>
+                {(environmentalSummary?.goalsProgress ?? []).length === 0 ? (
+                  <p className="text-body-sm text-outline">No environmental goals configured yet.</p>
+                ) : (
+                  environmentalSummary.goalsProgress.slice(0, 3).map((goal: any) => (
+                    <div key={goal.environmentalGoalId} className="space-y-1.5">
+                      <div className="flex items-center justify-between gap-3">
+                        <h4 className="font-bold text-body-sm">{goal.title}</h4>
+                        <span className="text-xs font-semibold text-primary">{Number(goal.progressPct ?? 0).toFixed(0)}%</span>
+                      </div>
+                      <p className="text-xs text-outline">
+                        {goal.currentValue} / {goal.targetValue} {goal.unit}
+                      </p>
+                      <div className="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+                        <div className="bg-leaf-green h-full" style={{ width: `${Math.min(100, Number(goal.progressPct ?? 0))}%` }}></div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -288,16 +308,32 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
           {showTxnForm && (
             <form onSubmit={handleAddTxn} className="glass-panel border border-border-subtle rounded-xl p-6 max-w-md space-y-4">
               <h3 className="font-semibold text-body-md text-primary">Log Manual Operational Event</h3>
-              <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-xs text-on-surface">Source Event description</label>
-                <input
-                  type="text"
-                  required
-                  value={txnSource}
-                  onChange={(e) => setTxnSource(e.target.value)}
-                  placeholder="e.g. Diesel generator run 2hrs"
-                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Source Type</label>
+                  <select
+                    value={txnSource}
+                    onChange={(e) => setTxnSource(e.target.value as any)}
+                    required
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  >
+                    <option value="MANUAL">Manual</option>
+                    <option value="PURCHASE">Purchase</option>
+                    <option value="MANUFACTURING">Manufacturing</option>
+                    <option value="EXPENSE">Expense</option>
+                    <option value="FLEET">Fleet</option>
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Transaction Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={txnDate}
+                    onChange={(e) => setTxnDate(e.target.value)}
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-semibold text-xs text-on-surface">Department</label>
@@ -309,22 +345,40 @@ export default function EnvironmentalViews({ activeTab }: EnvironmentalViewsProp
                 >
                   <option value="">Select Department</option>
                   {departments.map((d) => (
-                    <option key={d.id} value={d.name}>
+                    <option key={d.id} value={d.id}>
                       {d.name}
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="flex flex-col gap-1.5">
-                <label className="font-semibold text-xs text-on-surface">Calculated Emissions (in kg CO2)</label>
-                <input
-                  type="number"
-                  required
-                  value={txnEmissions}
-                  onChange={(e) => setTxnEmissions(e.target.value)}
-                  placeholder="e.g. 150"
-                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Emission Factor</label>
+                  <select
+                    value={txnFactor}
+                    onChange={(e) => setTxnFactor(e.target.value)}
+                    required
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  >
+                    <option value="">Select Factor</option>
+                    {emissionFactors.map((factor) => (
+                      <option key={factor.id} value={factor.id}>
+                        {factor.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-semibold text-xs text-on-surface">Quantity</label>
+                  <input
+                    type="number"
+                    required
+                    value={txnQuantity}
+                    onChange={(e) => setTxnQuantity(e.target.value)}
+                    placeholder="e.g. 150"
+                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                  />
+                </div>
               </div>
               <button
                 type="submit"

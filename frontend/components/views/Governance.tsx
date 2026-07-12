@@ -15,6 +15,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
     audits,
     complianceIssues,
     acknowledgements,
+    governanceSummary,
     createPolicy,
     scheduleAudit,
     addComplianceIssue,
@@ -42,6 +43,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
   const [issTitle, setIssTitle] = useState("");
   const [issSev, setIssSev] = useState<"Low" | "Medium" | "High" | "Critical">("Medium");
   const [issOwner, setIssOwner] = useState("");
+  const [issAuditId, setIssAuditId] = useState("");
   const [issDue, setIssDue] = useState("");
 
   // Acknowledging reader state
@@ -71,10 +73,17 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
 
   const handleAddIssue = (e: React.FormEvent) => {
     e.preventDefault();
-    if (issTitle && issOwner && issDue) {
-      addComplianceIssue(issTitle, issSev, issOwner, issDue);
+    if (issTitle && issOwner && issDue && issAuditId) {
+      addComplianceIssue({
+        description: issTitle,
+        severity: issSev,
+        ownerEmployeeId: issOwner,
+        dueDate: issDue,
+        auditId: issAuditId,
+      });
       setIssTitle("");
       setIssOwner("");
+      setIssAuditId("");
       setIssDue("");
       setShowIssueForm(false);
     }
@@ -89,6 +98,8 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
   };
 
   const currentViewTab = currentUser.role === "employee" ? "employee-policies" : activeTab;
+  const unresolvedIssuesCount = complianceIssues.filter((issue) => issue.status !== "Resolved" && issue.status !== "Closed").length;
+  const completedAuditsCount = audits.filter((audit) => audit.status === "Completed").length;
 
   return (
     <div className="space-y-6">
@@ -109,22 +120,24 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
               <AppIcon name="task_alt" className="text-4xl text-[#F57F17] mb-2 block" />
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Average Policy Ack</h3>
-              <div className="font-bold text-headline-lg text-primary">87.5%</div>
-              <span className="text-xs text-outline font-semibold mt-1 block">Target: 95% by end of year</span>
+              <div className="font-bold text-headline-lg text-primary">{Number(governanceSummary?.acknowledgementRate ?? 0).toFixed(1)}%</div>
+              <span className="text-xs text-outline font-semibold mt-1 block">Live from published policy acknowledgements</span>
             </div>
 
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
               <AppIcon name="fact_check" className="text-4xl text-primary mb-2 block" />
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Audit Status</h3>
-              <div className="font-bold text-headline-lg text-[#2E7D32]">2 / 3 Complete</div>
-              <span className="text-xs text-outline font-semibold mt-1 block">1 Scheduled in HR</span>
+              <div className="font-bold text-headline-lg text-[#2E7D32]">{completedAuditsCount} / {audits.length} Complete</div>
+              <span className="text-xs text-outline font-semibold mt-1 block">
+                {governanceSummary?.auditsByStatus?.length ? "Synced to backend audit log" : "No audits scheduled yet"}
+              </span>
             </div>
 
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
               <AppIcon name="gavel" className="text-4xl text-error mb-2 block" />
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Unresolved Compliance</h3>
               <div className="font-bold text-headline-lg text-error">
-                {complianceIssues.filter((c) => c.status === "Open").length} Open
+                {unresolvedIssuesCount} Open
               </div>
               <span className="text-xs text-error font-semibold mt-1 block">Requires action</span>
             </div>
@@ -485,12 +498,28 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
                   >
                     <option value="">Select Assignee</option>
                     {employees.map((emp) => (
-                      <option key={emp.id} value={emp.name}>
+                      <option key={emp.id} value={emp.id}>
                         {emp.name} ({emp.department})
                       </option>
                     ))}
                   </select>
                 </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">Related Audit</label>
+                <select
+                  value={issAuditId}
+                  onChange={(e) => setIssAuditId(e.target.value)}
+                  required
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                >
+                  <option value="">Select Audit</option>
+                  {audits.map((audit) => (
+                    <option key={audit.id} value={audit.id}>
+                      {audit.department} - {audit.date}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-semibold text-xs text-on-surface">Resolve Due Date</label>
@@ -545,7 +574,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
                     <td className="p-4">
                       <span
                         className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          ci.status === "Resolved"
+                          ci.status === "Resolved" || ci.status === "Closed"
                             ? "bg-leaf-green/10 text-[#2E7D32]"
                             : "bg-error-container text-error animate-pulse"
                         }`}
@@ -554,7 +583,7 @@ export default function GovernanceViews({ activeTab }: GovernanceViewsProps) {
                       </span>
                     </td>
                     <td className="p-4 text-right">
-                      {ci.status === "Open" ? (
+                      {ci.status !== "Resolved" && ci.status !== "Closed" ? (
                         <button
                           onClick={() => resolveComplianceIssue(ci.id)}
                           className="bg-primary text-on-primary hover:bg-primary-container px-3 py-1 rounded text-xs font-semibold cursor-pointer active:scale-95 transition-all"

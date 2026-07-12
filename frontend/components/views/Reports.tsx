@@ -5,7 +5,7 @@ import { useEsg } from "@/context/EsgContext";
 import AppIcon from "@/components/AppIcon";
 
 export default function ReportsViews() {
-  const { departments } = useEsg();
+  const { departments, overview, environmentalSummary, socialSummary, governanceSummary } = useEsg();
   const [activeSubTab, setActiveSubTab] = useState<"portal" | "viewer" | "builder">("portal");
   const [selectedReportTitle, setSelectedReportTitle] = useState("ESG Summary Report");
   
@@ -25,6 +25,8 @@ export default function ReportsViews() {
       alert("Report downloaded successfully as PDF!");
     }, 1500);
   };
+
+  const orgScore = overview?.organizationScore ?? {};
 
   return (
     <div className="space-y-6">
@@ -159,15 +161,15 @@ export default function ReportsViews() {
             <div className="grid grid-cols-3 gap-6 text-center">
               <div className="bg-surface-container-low p-4 rounded-xl border border-border-subtle/40">
                 <span className="text-[10px] text-outline font-semibold uppercase tracking-wider block mb-1">E Score</span>
-                <span className="text-2xl font-bold text-[#2E7D32]">82 / 100</span>
+                <span className="text-2xl font-bold text-[#2E7D32]">{Number(orgScore.environmentalScore ?? 0).toFixed(1)} / 100</span>
               </div>
               <div className="bg-surface-container-low p-4 rounded-xl border border-border-subtle/40">
                 <span className="text-[10px] text-outline font-semibold uppercase tracking-wider block mb-1">S Score</span>
-                <span className="text-2xl font-bold text-[#1565C0]">75 / 100</span>
+                <span className="text-2xl font-bold text-[#1565C0]">{Number(orgScore.socialScore ?? 0).toFixed(1)} / 100</span>
               </div>
               <div className="bg-surface-container-low p-4 rounded-xl border border-border-subtle/40">
                 <span className="text-[10px] text-outline font-semibold uppercase tracking-wider block mb-1">G Score</span>
-                <span className="text-2xl font-bold text-[#F57F17]">71 / 100</span>
+                <span className="text-2xl font-bold text-[#F57F17]">{Number(orgScore.governanceScore ?? 0).toFixed(1)} / 100</span>
               </div>
             </div>
 
@@ -175,12 +177,12 @@ export default function ReportsViews() {
             <div className="space-y-4 text-body-sm text-on-surface-variant leading-relaxed">
               <h4 className="font-bold text-on-surface border-l-4 border-primary pl-2 text-body-md">1. Executive Overview</h4>
               <p>
-                During this reporting period, EcoSphere registered significant improvements in carbon efficiency and community volunteering programs. Our overall corporate score holds at 78/100, placing us in the top decile of industrial sustainability benchmarks.
+                During this reporting period, EcoSphere recorded an overall ESG score of {Number(orgScore.totalScore ?? 0).toFixed(1)} across {orgScore.departmentCount ?? 0} active departments, with the latest dashboards pulling directly from operational, participation, and governance records.
               </p>
 
               <h4 className="font-bold text-on-surface border-l-4 border-primary pl-2 text-body-md mt-6">2. Carbon Footprint Analysis</h4>
               <p>
-                Direct operations emissions fell by 5.2% due to improved scheduling at Manufacturing Plant A. Overall electricity consumption metrics remained within sustainability limits with minor variance in IT operations.
+                Total tracked emissions for the selected period are {Number(environmentalSummary?.totalCo2eEmitted ?? 0).toLocaleString()} kg CO2e, while approved CSR participation is {socialSummary?.approvedCsrParticipations ?? 0} and the current governance acknowledgement rate stands at {Number(governanceSummary?.acknowledgementRate ?? 0).toFixed(1)}%.
               </p>
             </div>
             
@@ -283,11 +285,11 @@ export default function ReportsViews() {
                         <div className="p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50 grid grid-cols-2 gap-4">
                           <div>
                             <span className="text-xs text-outline font-semibold">Total Scope 1 Emissions</span>
-                            <p className="font-bold text-on-surface">24,500 kg CO2</p>
+                            <p className="font-bold text-on-surface">{Number(environmentalSummary?.totalCo2eEmitted ?? 0).toLocaleString()} kg CO2e</p>
                           </div>
                           <div>
-                            <span className="text-xs text-outline font-semibold">Total Scope 2 Emissions</span>
-                            <p className="font-bold text-on-surface">14,200 kg CO2</p>
+                            <span className="text-xs text-outline font-semibold">Active Goals Tracked</span>
+                            <p className="font-bold text-on-surface">{environmentalSummary?.goalsProgress?.length ?? 0}</p>
                           </div>
                         </div>
                       </div>
@@ -299,11 +301,11 @@ export default function ReportsViews() {
                         <div className="p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50 grid grid-cols-2 gap-4">
                           <div>
                             <span className="text-xs text-outline font-semibold">Active CSR Programs</span>
-                            <p className="font-bold text-on-surface">1 active program</p>
+                            <p className="font-bold text-on-surface">{socialSummary?.csrActivitiesCount ?? 0} active programs</p>
                           </div>
                           <div>
                             <span className="text-xs text-outline font-semibold">Volunteer Participations</span>
-                            <p className="font-bold text-on-surface">3 employees registered</p>
+                            <p className="font-bold text-on-surface">{socialSummary?.approvedCsrParticipations ?? 0} approved participations</p>
                           </div>
                         </div>
                       </div>
@@ -313,7 +315,9 @@ export default function ReportsViews() {
                       <div className="space-y-2">
                         <h4 className="font-bold text-primary">Governance Compliance logs</h4>
                         <div className="p-3 bg-surface-container-low/50 rounded-lg border border-border-subtle/50">
-                          <p className="text-xs font-semibold text-on-surface italic">Audit compliance matches 100% policy checklist directives.</p>
+                          <p className="text-xs font-semibold text-on-surface italic">
+                            {governanceSummary?.openIssues ?? 0} open issues and {governanceSummary?.overdueIssues ?? 0} overdue issues are currently tracked.
+                          </p>
                         </div>
                       </div>
                     )}

@@ -13,6 +13,7 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
     currentUser,
     csrActivities,
     submissions,
+    socialSummary,
     joinActivity,
     submitActivityProof,
     approveSubmission,
@@ -77,24 +78,24 @@ export default function SocialViews({ activeTab }: SocialViewsProps) {
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
               <AppIcon name="volunteer_activism" className="text-4xl text-primary mb-2 block" />
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Community Hours</h3>
-              <div className="font-bold text-headline-lg text-primary">1,240 hrs</div>
-              <span className="text-xs text-leaf-green font-semibold mt-1 block">+12% vs last quarter</span>
+              <div className="font-bold text-headline-lg text-primary">{socialSummary?.approvedCsrParticipations ?? 0}</div>
+              <span className="text-xs text-leaf-green font-semibold mt-1 block">Approved CSR participations</span>
             </div>
 
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
               <AppIcon name="school" className="text-4xl text-primary mb-2 block" />
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Training Completion</h3>
-              <div className="font-bold text-headline-lg text-primary">94.2%</div>
+              <div className="font-bold text-headline-lg text-primary">{Number(socialSummary?.challengeParticipationRate ?? 0).toFixed(1)}%</div>
               <div className="w-full bg-surface-container-high h-2 rounded-full mt-2 overflow-hidden">
-                <div className="bg-leaf-green h-full" style={{ width: "94%" }}></div>
+                <div className="bg-leaf-green h-full" style={{ width: `${Math.min(100, Number(socialSummary?.challengeParticipationRate ?? 0))}%` }}></div>
               </div>
             </div>
 
             <div className="bg-surface-container-lowest border border-border-subtle rounded-xl p-6 relative overflow-hidden group hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
               <AppIcon name="diversity_3" className="text-4xl text-primary mb-2 block" />
               <h3 className="font-semibold text-label-md text-on-surface-variant uppercase tracking-wider mb-1">Diversity Index</h3>
-              <div className="font-bold text-headline-lg text-primary">76 / 100</div>
-              <span className="text-xs text-outline font-semibold mt-1 block">Meets industry benchmark</span>
+              <div className="font-bold text-headline-lg text-primary">{Number(socialSummary?.combinedSocialEngagementRate ?? 0).toFixed(1)} / 100</div>
+              <span className="text-xs text-outline font-semibold mt-1 block">Combined engagement rate</span>
             </div>
           </div>
         </div>

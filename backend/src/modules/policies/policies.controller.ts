@@ -13,7 +13,9 @@ export const policiesController = {
 
   async list(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const result = await policiesService.list(req.user!.organizationId, req.query);
+      const result = await policiesService.list(req.user!.organizationId, req.query, {
+        employeeId: req.user!.employeeId,
+      });
       res.status(200).json({ data: result });
     } catch (err) {
       next(err);

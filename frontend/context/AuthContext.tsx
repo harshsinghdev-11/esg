@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import api from "../lib/api";
 import { BackendRole } from "../lib/rbac";
 
@@ -22,6 +22,7 @@ interface AuthContextType {
   loading: boolean;
   login: (token: string, user: any) => void;
   logout: () => void;
+  refreshUser: () => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,13 +43,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   };
 
+  const refreshUser = useCallback(async () => {
+    const { data } = await api.get("/auth/me");
+    const nextUser = processUser(data.data);
+    setCurrentUser(nextUser);
+    return nextUser;
+  }, []);
+
   useEffect(() => {
     const initAuth = async () => {
       const token = localStorage.getItem("access_token");
       if (token) {
         try {
-          const { data } = await api.get("/auth/me");
-          setCurrentUser(processUser(data.data));
+          await refreshUser();
         } catch (error) {
           console.error("Failed to fetch user profile", error);
           localStorage.removeItem("access_token");
@@ -59,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initAuth();
-  }, []);
+  }, [refreshUser]);
 
   const login = (token: string, user: any) => {
     localStorage.setItem("access_token", token);
@@ -74,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ currentUser, loading, login, logout }}>
+    <AuthContext.Provider value={{ currentUser, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

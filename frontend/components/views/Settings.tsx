@@ -24,8 +24,6 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
   // Local Form states
   const [showDeptForm, setShowDeptForm] = useState(false);
   const [deptName, setDeptName] = useState("");
-  // We need to use employee ID for head, not just name.
-  // For simplicity we will pick the first admin or user if none specified, or just leave it null for now since it might need a dropdown
   const [deptHead, setDeptHead] = useState(""); 
 
   const [showEmpForm, setShowEmpForm] = useState(false);
@@ -165,14 +163,18 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="font-semibold text-xs text-on-surface">Department Head</label>
-                <input
-                  type="text"
-                  required
+                <select
                   value={deptHead}
                   onChange={(e) => setDeptHead(e.target.value)}
-                  placeholder="e.g. Jane Doe"
                   className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
-                />
+                >
+                  <option value="">Select Department Head</option>
+                  {employees.map((employee: any) => (
+                    <option key={employee.employeeId} value={employee.employeeId}>
+                      {employee.fullName}
+                    </option>
+                  ))}
+                </select>
               </div>
               <button
                 type="submit"
@@ -249,14 +251,17 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="font-semibold text-xs text-on-surface">Role Designation</label>
-                  <input
-                    type="text"
-                    required
+                  <select
                     value={empRole}
                     onChange={(e) => setEmpRole(e.target.value)}
-                    placeholder="e.g. Operations Manager"
                     className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
-                  />
+                  >
+                    <option value="EMPLOYEE">Employee</option>
+                    <option value="DEPT_HEAD">Department Head</option>
+                    <option value="AUDITOR">Auditor</option>
+                    <option value="ESG_MANAGER">ESG Manager</option>
+                    <option value="SUPER_ADMIN">Super Admin</option>
+                  </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="font-semibold text-xs text-on-surface">Department</label>
@@ -335,8 +340,8 @@ export default function SettingsViews({ activeTab }: SettingsViewsProps) {
                   onChange={(e) => setCatType(e.target.value as any)}
                   className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
                 >
-                  <option value="csr">CSR Activities</option>
-                  <option value="challenge">Gamification Challenges</option>
+                  <option value="CSR_ACTIVITY">CSR Activities</option>
+                  <option value="CHALLENGE">Gamification Challenges</option>
                 </select>
               </div>
               <div className="flex flex-col gap-1.5">

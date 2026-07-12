@@ -19,7 +19,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
     unlockedBadges,
     rewards,
     redemptions,
-    employees,
+    leaderboard,
     createChallenge,
     activateChallenge,
     approveSubmission,
@@ -38,7 +38,6 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
   const [chTitle, setChTitle] = useState("");
   const [chCat, setChCat] = useState("Energy Saving");
   const [chXp, setChXp] = useState(100);
-  const [chPoints, setChPoints] = useState(100);
   const [chDiff, setChDiff] = useState<"Easy" | "Medium" | "Hard">("Medium");
   const [chEvid, setChEvid] = useState(true);
   const [chDead, setChDead] = useState("");
@@ -68,7 +67,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
   const handleCreateChallenge = (e: React.FormEvent) => {
     e.preventDefault();
     if (chTitle && chDead) {
-      createChallenge(chTitle, chCat, Number(chXp), Number(chPoints), chDiff, chEvid, chDead);
+      createChallenge(chTitle, chCat, Number(chXp), 0, chDiff, chEvid, chDead);
       setChTitle("");
       setChDead("");
       setShowChallengeForm(false);
@@ -161,27 +160,15 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                   </select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-semibold text-xs text-on-surface">XP Reward</label>
-                  <input
-                    type="number"
-                    required
-                    value={chXp}
-                    onChange={(e) => setChXp(Number(e.target.value))}
-                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-semibold text-xs text-on-surface">Points Reward</label>
-                  <input
-                    type="number"
-                    required
-                    value={chPoints}
-                    onChange={(e) => setChPoints(Number(e.target.value))}
-                    className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
-                  />
-                </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="font-semibold text-xs text-on-surface">XP Reward</label>
+                <input
+                  type="number"
+                  required
+                  value={chXp}
+                  onChange={(e) => setChXp(Number(e.target.value))}
+                  className="w-full bg-surface-white border border-border-subtle rounded-lg p-2 text-body-sm focus:outline-none focus:border-primary"
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
@@ -222,7 +209,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                 <tr>
                   <th className="p-4 py-3">Challenge Name</th>
                   <th className="p-4 py-3">Difficulty</th>
-                  <th className="p-4 py-3 text-center">XP / Points Value</th>
+                  <th className="p-4 py-3 text-center">XP Value</th>
                   <th className="p-4 py-3">Deadline</th>
                   <th className="p-4 py-3">Status</th>
                   <th className="p-4 py-3 text-right">Action</th>
@@ -245,9 +232,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                         {ch.difficulty}
                       </span>
                     </td>
-                    <td className="p-4 text-center font-semibold text-primary">
-                      +{ch.xp} XP / +{ch.points} pts
-                    </td>
+                    <td className="p-4 text-center font-semibold text-primary">+{ch.xp} XP</td>
                     <td className="p-4 text-outline">{ch.deadline}</td>
                     <td className="p-4 font-bold text-on-surface-variant">
                       <span
@@ -309,7 +294,7 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                     </div>
                     <div className="text-right shrink-0">
                       <span className="text-primary font-bold text-body-md block">+{ch.xp} XP</span>
-                      <span className="text-outline text-xs block">+{ch.points} pts</span>
+                      <span className="text-outline text-xs block">{ch.difficulty}</span>
                     </div>
                   </div>
 
@@ -690,17 +675,11 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
               </thead>
               <tbody className="text-body-sm text-on-surface divide-y divide-border-subtle">
                 {/* Dynamically build ranking list based on users list and current user details */}
-                {[
-                  { id: "adm_1", name: "Sarah Chen", department: "Executive", points: 9999 },
-                  { id: "emp_3", name: "John Doe", department: "Operations", points: 3100 },
-                  { id: "emp_1", name: currentUser.name, department: "Operations", points: currentUser.role === "employee" ? currentUser.points : 2450 },
-                  { id: "emp_4", name: "Jane Smith", department: "HR", points: 1200 },
-                  { id: "emp_5", name: "Robert Lee", department: "Manufacturing", points: 950 },
-                ].sort((a, b) => b.points - a.points).map((user, index) => {
-                  const isSelf = user.name === currentUser.name && currentUser.role === "employee";
+                {leaderboard.map((user, index) => {
+                  const isSelf = user.employeeId === currentUser.id;
                   return (
                     <tr
-                      key={user.id}
+                      key={user.employeeId}
                       className={`transition-colors ${
                         isSelf ? "bg-primary-container/10 hover:bg-primary-container/15 font-semibold" : "hover:bg-surface-container-low/30"
                       }`}
@@ -709,15 +688,15 @@ export default function GamificationViews({ activeTab }: GamificationViewsProps)
                         {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : index + 1}
                       </td>
                       <td className="p-4 flex items-center gap-2">
-                        <span>{user.name}</span>
+                        <span>{user.fullName}</span>
                         {isSelf && (
                           <span className="bg-primary text-on-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full">
                             YOU
                           </span>
                         )}
                       </td>
-                      <td className="p-4 text-outline">{user.department}</td>
-                      <td className="p-4 text-right font-bold text-primary">{user.points.toLocaleString()} pts</td>
+                      <td className="p-4 text-outline">{user.departmentName}</td>
+                      <td className="p-4 text-right font-bold text-primary">{user.totalPointsBalance.toLocaleString()} pts</td>
                     </tr>
                   );
                 })}

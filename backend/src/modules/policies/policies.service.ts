@@ -14,13 +14,64 @@ export const policiesService = {
     });
   },
 
-  async list(organizationId: string, query: any) {
+  async list(organizationId: string, query: any, currentUser?: { employeeId: string }) {
     const { status } = query;
-    return prisma.esgPolicy.findMany({
-      where: {
-        organizationId,
-        ...(status ? { status: status as RecordStatus } : {})
-      }
+    const where = {
+      organizationId,
+      ...(status ? { status: status as RecordStatus } : {})
+    };
+
+    const [policies, activeEmployeeCount] = await Promise.all([
+      prisma.esgPolicy.findMany({
+        where,
+        include: {
+          _count: {
+            select: {
+              policyAcknowledgements: true,
+            },
+          },
+          ...(currentUser
+            ? {
+                policyAcknowledgements: {
+                  where: {
+                    employeeId: currentUser.employeeId,
+                  },
+                  select: {
+                    policyAcknowledgementId: true,
+                    employeeId: true,
+                    acknowledgedAt: true,
+                  },
+                  take: 1,
+                },
+              }
+            : {}),
+        },
+      }),
+      prisma.employee.count({
+        where: {
+          organizationId,
+          status: EmployeeStatus.ACTIVE,
+        },
+      }),
+    ]);
+
+    return policies.map((policy) => {
+      const currentAcknowledgement =
+        'policyAcknowledgements' in policy && Array.isArray(policy.policyAcknowledgements)
+          ? policy.policyAcknowledgements[0] ?? null
+          : null;
+
+      const acknowledgementCount = policy._count.policyAcknowledgements;
+      const acknowledgementRate =
+        activeEmployeeCount > 0 ? Number(((acknowledgementCount / activeEmployeeCount) * 100).toFixed(2)) : 0;
+
+      return {
+        ...policy,
+        acknowledgementCount,
+        acknowledgementRate,
+        acknowledgedByCurrentEmployee: Boolean(currentAcknowledgement),
+        currentEmployeeAcknowledgement: currentAcknowledgement,
+      };
     });
   },
 

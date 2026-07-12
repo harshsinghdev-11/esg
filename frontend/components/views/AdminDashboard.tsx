@@ -5,24 +5,19 @@ import { useEsg } from "@/context/EsgContext";
 import AppIcon from "@/components/AppIcon";
 
 export default function OrgDashboardView() {
-  const { departments, complianceIssues } = useEsg();
+  const { overview, departmentRankings, complianceIssues } = useEsg();
   const [trendPillar, setTrendPillar] = useState("Overall");
 
-  // Calculate some stats based on context state
-  const openComplianceCount = complianceIssues.filter((c) => c.status === "Open").length;
-
-  // Mock score statistics
-  const overallScore = 78;
-  const envScore = 82;
-  const socialScore = 75;
-  const govScore = 71;
-
-  // Departments ESG statistics matching the design
-  const departmentStats = [
-    { rank: 1, name: "HR & Administration", env: 85, social: 90, gov: 88, total: 87.6 },
-    { rank: 2, name: "Operations Division", env: 80, social: 78, gov: 75, total: 77.9 },
-    { rank: 3, name: "Manufacturing Plant A", env: 72, social: 65, gov: 60, total: 66.3 },
-  ];
+  const openComplianceCount = complianceIssues.filter(
+    (issue) => issue.status !== "Resolved" && issue.status !== "Closed",
+  ).length;
+  const orgScore = overview?.organizationScore ?? {};
+  const overallScore = Number(orgScore.totalScore ?? 0).toFixed(1);
+  const envScore = Number(orgScore.environmentalScore ?? 0).toFixed(1);
+  const socialScore = Number(orgScore.socialScore ?? 0).toFixed(1);
+  const govScore = Number(orgScore.governanceScore ?? 0).toFixed(1);
+  const trendData = overview?.environmental?.emissionsTrend ?? [];
+  const maxTrendValue = Math.max(...trendData.map((entry: any) => Number(entry.value ?? 0)), 1);
 
   return (
     <div className="space-y-6">
@@ -53,7 +48,7 @@ export default function OrgDashboardView() {
               />
               <path
                 className="text-primary transition-all duration-500"
-                strokeDasharray={`${overallScore}, 100`}
+                strokeDasharray={`${Number(overallScore)}, 100`}
                 strokeWidth="3"
                 strokeLinecap="round"
                 stroke="currentColor"
@@ -67,8 +62,8 @@ export default function OrgDashboardView() {
             </div>
           </div>
           <div className="mt-4 flex items-center gap-1.5 text-leaf-green">
-            <AppIcon name="trending_up" className="text-sm font-bold" />
-            <span className="font-semibold text-label-md">+2.4% vs last quarter</span>
+            <AppIcon name="analytics" className="text-sm font-bold" />
+            <span className="font-semibold text-label-md">{overview?.organizationScore?.departmentCount ?? 0} departments contributing</span>
           </div>
         </div>
 
@@ -87,8 +82,8 @@ export default function OrgDashboardView() {
             <div>
               <div className="font-bold text-headline-lg text-on-surface mb-1">{envScore}</div>
               <div className="flex items-center gap-1 text-[#2E7D32] font-semibold text-label-md">
-                <AppIcon name="arrow_upward" className="text-sm" />
-                <span>+4.1 vs Q1</span>
+                <AppIcon name="eco" className="text-sm" />
+                <span>Environmental</span>
               </div>
             </div>
           </div>
@@ -106,8 +101,8 @@ export default function OrgDashboardView() {
             <div>
               <div className="font-bold text-headline-lg text-on-surface mb-1">{socialScore}</div>
               <div className="flex items-center gap-1 text-[#1565C0] font-semibold text-label-md">
-                <AppIcon name="arrow_upward" className="text-sm" />
-                <span>+1.2 vs Q1</span>
+                <AppIcon name="group" className="text-sm" />
+                <span>Social</span>
               </div>
             </div>
           </div>
@@ -125,8 +120,8 @@ export default function OrgDashboardView() {
             <div>
               <div className="font-bold text-headline-lg text-on-surface mb-1">{govScore}</div>
               <div className="flex items-center gap-1 text-error font-semibold text-label-md">
-                <AppIcon name="arrow_downward" className="text-sm" />
-                <span>-0.8 vs Q1</span>
+                <AppIcon name="gavel" className="text-sm" />
+                <span>Governance</span>
               </div>
             </div>
           </div>
@@ -138,7 +133,7 @@ export default function OrgDashboardView() {
         {/* Trend Chart */}
         <div className="xl:col-span-2 bg-surface-container-lowest border border-border-subtle rounded-xl p-6 hover:shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.05)] transition-shadow">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="font-semibold text-headline-sm text-on-surface">6-Month ESG Trend</h2>
+            <h2 className="font-semibold text-headline-sm text-on-surface">Emissions Trend</h2>
             <select
               value={trendPillar}
               onChange={(e) => setTrendPillar(e.target.value)}
@@ -150,67 +145,32 @@ export default function OrgDashboardView() {
               <option>Governance</option>
             </select>
           </div>
-          {/* CSS Chart Bars */}
           <div
             className="w-full h-64 bg-surface-container-low rounded-lg relative overflow-hidden flex items-end px-4 gap-4 pb-2"
             style={{
               backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 39px, #e2e8f0 40px)",
             }}
           >
-            {/* January */}
-            <div className="w-full flex flex-col items-center justify-end h-full">
-              <div className="w-8 bg-primary/30 rounded-t-lg h-[68%] hover:bg-primary transition-all duration-200 relative group cursor-pointer">
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] font-bold py-1 px-1.5 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity mb-1 z-10">
-                  68
-                </div>
+            {trendData.length === 0 ? (
+              <div className="flex h-full w-full items-center justify-center text-body-sm text-outline">
+                No trend data available yet.
               </div>
-              <span className="text-[10px] text-on-surface-variant mt-2 font-semibold">Jan</span>
-            </div>
-            {/* February */}
-            <div className="w-full flex flex-col items-center justify-end h-full">
-              <div className="w-8 bg-primary/45 rounded-t-lg h-[70%] hover:bg-primary transition-all duration-200 relative group cursor-pointer">
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] font-bold py-1 px-1.5 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity mb-1 z-10">
-                  70
-                </div>
-              </div>
-              <span className="text-[10px] text-on-surface-variant mt-2 font-semibold">Feb</span>
-            </div>
-            {/* March */}
-            <div className="w-full flex flex-col items-center justify-end h-full">
-              <div className="w-8 bg-primary/60 rounded-t-lg h-[72%] hover:bg-primary transition-all duration-200 relative group cursor-pointer">
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] font-bold py-1 px-1.5 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity mb-1 z-10">
-                  72
-                </div>
-              </div>
-              <span className="text-[10px] text-on-surface-variant mt-2 font-semibold">Mar</span>
-            </div>
-            {/* April */}
-            <div className="w-full flex flex-col items-center justify-end h-full">
-              <div className="w-8 bg-primary/75 rounded-t-lg h-[75%] hover:bg-primary transition-all duration-200 relative group cursor-pointer">
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] font-bold py-1 px-1.5 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity mb-1 z-10">
-                  75
-                </div>
-              </div>
-              <span className="text-[10px] text-on-surface-variant mt-2 font-semibold">Apr</span>
-            </div>
-            {/* May */}
-            <div className="w-full flex flex-col items-center justify-end h-full">
-              <div className="w-8 bg-primary/85 rounded-t-lg h-[76%] hover:bg-primary transition-all duration-200 relative group cursor-pointer">
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] font-bold py-1 px-1.5 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity mb-1 z-10">
-                  76
-                </div>
-              </div>
-              <span className="text-[10px] text-on-surface-variant mt-2 font-semibold">May</span>
-            </div>
-            {/* June */}
-            <div className="w-full flex flex-col items-center justify-end h-full">
-              <div className="w-8 bg-primary rounded-t-lg h-[78%] hover:bg-primary-container transition-all duration-200 relative group cursor-pointer">
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] font-bold py-1 px-1.5 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity mb-1 z-10">
-                  78
-                </div>
-              </div>
-              <span className="text-[10px] text-on-surface-variant mt-2 font-bold text-primary">Jun</span>
-            </div>
+            ) : (
+              trendData.map((entry: any) => {
+                const value = Number(entry.value ?? 0);
+                const height = `${Math.max(8, (value / maxTrendValue) * 100)}%`;
+                return (
+                  <div key={entry.label} className="w-full flex flex-col items-center justify-end h-full">
+                    <div className="w-8 bg-primary rounded-t-lg hover:bg-primary-container transition-all duration-200 relative group cursor-pointer" style={{ height }}>
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 bg-inverse-surface text-inverse-on-surface text-[10px] font-bold py-1 px-1.5 rounded shadow opacity-0 group-hover:opacity-100 transition-opacity mb-1 z-10">
+                        {value.toLocaleString()}
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-on-surface-variant mt-2 font-semibold">{entry.label}</span>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -219,24 +179,11 @@ export default function OrgDashboardView() {
           <div className="flex justify-between items-center mb-6">
             <h2 className="font-semibold text-headline-sm text-on-surface">Compliance Alerts</h2>
             <span className="bg-error-container text-on-error-container px-2 py-0.5 rounded-full font-semibold text-xs shrink-0">
-              {openComplianceCount + 1} Action Needed
+              {openComplianceCount} Action Needed
             </span>
           </div>
           <div className="space-y-4 flex-grow overflow-y-auto max-h-[220px] hide-scrollbar">
-            {/* Alert 1 */}
-            <div className="flex items-start gap-3 p-3 rounded-lg border border-error-container bg-error-container/10">
-              <AppIcon name="warning" className="text-error mt-0.5" />
-              <div>
-                <div className="font-semibold text-label-md text-on-surface mb-1">Waste Audit Overdue</div>
-                <div className="text-body-sm text-on-surface-variant">Manufacturing Facility Plant A</div>
-                <div className="mt-1.5">
-                  <span className="bg-error text-on-error px-2 py-0.5 rounded-full text-[9px] font-bold">OVERDUE</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Alert 2 */}
-            {complianceIssues.filter(ci => ci.status === "Open").map((ci, index) => (
+            {complianceIssues.filter(ci => ci.status !== "Resolved" && ci.status !== "Closed").map((ci) => (
               <div key={ci.id} className="flex items-start gap-3 p-3 rounded-lg border border-error-container bg-error-container/5">
                 <AppIcon
                   name={ci.severity === "Critical" ? "gavel" : "warning"}
@@ -276,14 +223,14 @@ export default function OrgDashboardView() {
               </tr>
             </thead>
             <tbody className="text-body-sm text-on-surface divide-y divide-border-subtle bg-surface-container-lowest">
-              {departmentStats.map((dept) => (
-                <tr key={dept.rank} className="hover:bg-surface-container-low/30 transition-colors">
+              {departmentRankings.map((dept) => (
+                <tr key={dept.departmentId} className="hover:bg-surface-container-low/30 transition-colors">
                   <td className="p-4 font-bold text-on-surface-variant">{dept.rank}</td>
-                  <td className="p-4 font-semibold text-on-surface">{dept.name}</td>
-                  <td className="p-4 text-center font-semibold text-[#2E7D32]">{dept.env}</td>
-                  <td className="p-4 text-center font-semibold text-[#1565C0]">{dept.social}</td>
-                  <td className="p-4 text-center font-semibold text-[#F57F17]">{dept.gov}</td>
-                  <td className="p-4 text-center font-bold text-primary">{dept.total}</td>
+                  <td className="p-4 font-semibold text-on-surface">{dept.departmentName}</td>
+                  <td className="p-4 text-center font-semibold text-[#2E7D32]">{dept.environmentalScore.toFixed(1)}</td>
+                  <td className="p-4 text-center font-semibold text-[#1565C0]">{dept.socialScore.toFixed(1)}</td>
+                  <td className="p-4 text-center font-semibold text-[#F57F17]">{dept.governanceScore.toFixed(1)}</td>
+                  <td className="p-4 text-center font-bold text-primary">{dept.totalScore.toFixed(1)}</td>
                 </tr>
               ))}
             </tbody>

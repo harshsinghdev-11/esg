@@ -29,6 +29,20 @@ export const participationsController = {
     }
   },
 
+  async updateProof(req: Request, res: Response, next: NextFunction) {
+    try {
+      const participation = await participationsService.updateProof(
+        req.user!.organizationId,
+        req.params.id as string,
+        req.user!.employeeId,
+        req.body,
+      );
+      res.json({ data: participation });
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async approve(req: Request, res: Response, next: NextFunction) {
     try {
       const participation = await participationsService.approve(req.user!.organizationId, req.params.id as string, req.user!.employeeId);
